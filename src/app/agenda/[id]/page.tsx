@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, MapPin, DollarSign, CheckCircle2, ChevronLeft, ChevronRight, Video as VideoIcon } from "lucide-react";
+import { Calendar, MapPin, DollarSign, CheckCircle2, ChevronLeft, ChevronRight, Video as VideoIcon, Send } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 

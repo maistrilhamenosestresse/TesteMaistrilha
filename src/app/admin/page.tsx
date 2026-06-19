@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Calendar, MapPin, DollarSign, FileText, Send, Image as ImageIcon, Video, Loader2, Trash2, CalendarDays, Edit2, Sparkles } from "lucide-react";
+import { Calendar, MapPin, DollarSign, FileText, Send, Image as ImageIcon, Video, Loader2, Trash2, CalendarDays, Edit2, Sparkles, CheckCircle2, FileUp } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 type AgendaForm = {
@@ -12,6 +12,7 @@ type AgendaForm = {
   price: string;
   description: string;
   meeting_point: string;
+  flyer: FileList;
   images: FileList;
   video: FileList;
 };
@@ -25,7 +26,10 @@ export default function AdminPage() {
   
   const [isFormattingMeetingPoint, setIsFormattingMeetingPoint] = useState(false);
   const [isFormattingDescription, setIsFormattingDescription] = useState(false);
+  const [aiSuccessMeeting, setAiSuccessMeeting] = useState(false);
+  const [aiSuccessDesc, setAiSuccessDesc] = useState(false);
   
+  const selectedFlyer = watch("flyer");
   const selectedImages = watch("images");
   const selectedVideo = watch("video");
 
@@ -80,12 +84,16 @@ export default function AdminPage() {
     setValue("price", agenda.price.toString().replace('.', ','));
     setValue("meeting_point", agenda.meeting_point);
     setValue("description", agenda.description);
+    setAiSuccessMeeting(false);
+    setAiSuccessDesc(false);
     
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const cancelEdit = () => {
     setEditingAgenda(null);
+    setAiSuccessMeeting(false);
+    setAiSuccessDesc(false);
     reset();
   };
 
@@ -97,8 +105,13 @@ export default function AdminPage() {
       return;
     }
 
-    if (type === 'meeting_point') setIsFormattingMeetingPoint(true);
-    else setIsFormattingDescription(true);
+    if (type === 'meeting_point') {
+      setIsFormattingMeetingPoint(true);
+      setAiSuccessMeeting(false);
+    } else {
+      setIsFormattingDescription(true);
+      setAiSuccessDesc(false);
+    }
 
     try {
       const res = await fetch("/api/generate-message", {
@@ -110,6 +123,8 @@ export default function AdminPage() {
       
       if (data.result) {
         setValue(type, data.result);
+        if (type === 'meeting_point') setAiSuccessMeeting(true);
+        else setAiSuccessDesc(true);
       } else {
         alert("Erro na resposta da IA.");
       }
@@ -128,7 +143,22 @@ export default function AdminPage() {
     try {
       let imageUrls: string[] = editingAgenda ? editingAgenda.images || [] : [];
       let videoUrl: string | null = editingAgenda ? editingAgenda.video_url : null;
+      let flyerUrl: string | null = editingAgenda ? editingAgenda.flyer_url : null;
       
+      // Upload do Flyer
+      if (data.flyer && data.flyer.length > 0) {
+        const file = data.flyer[0];
+        const fileExt = file.name.split('.').pop();
+        const fileName = `flyer_${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage.from('fotos_agendas').upload(fileName, file);
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase.storage.from('fotos_agendas').getPublicUrl(fileName);
+        flyerUrl = publicUrlData.publicUrl;
+      }
+
+      // Upload de Imagens
       if (data.images && data.images.length > 0) {
         imageUrls = [];
         for (let i = 0; i < data.images.length; i++) {
@@ -144,6 +174,7 @@ export default function AdminPage() {
         }
       }
 
+      // Upload de Vídeo
       if (data.video && data.video.length > 0) {
         const file = data.video[0];
         const fileExt = file.name.split('.').pop();
@@ -163,7 +194,8 @@ export default function AdminPage() {
         description: data.description,
         meeting_point: data.meeting_point,
         images: imageUrls,
-        video_url: videoUrl
+        video_url: videoUrl,
+        flyer_url: flyerUrl
       };
 
       if (editingAgenda) {
@@ -178,6 +210,8 @@ export default function AdminPage() {
         reset();
       }
       
+      setAiSuccessMeeting(false);
+      setAiSuccessDesc(false);
       fetchAgendasAndCleanup();
     } catch (error: any) {
       console.error("Erro completo:", error);
@@ -191,7 +225,7 @@ export default function AdminPage() {
   const whatsappMessage = `⛰️ A nossa agenda oficial chegou! Prepare as botas!\n\nClique no link abaixo para conferir as nossas próximas trilhas, ver as fotos, roteiros e garantir sua vaga:\n\n👉 ${globalSiteUrl}`;
   const whatsappLink = `https://wa.me/?text=${encodeURIComponent(whatsappMessage)}`;
 
-  // Função helper para exibir datas perfeitamente sem problema de fuso horário
+  // Função helper para exibir datas
   const formatDateDisplay = (dateString: string) => {
     const [year, month, day] = dateString.split('-');
     return `${day}/${month}/${year}`;
@@ -256,18 +290,25 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100">
+              {/* Botão e Campo com IA para Ponto de Encontro */}
+              <div className={`p-4 rounded-xl border transition-colors ${aiSuccessMeeting ? 'bg-green-50 border-green-200' : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-100'}`}>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-sm font-bold text-gray-800">Pontos de Encontro e Horários</label>
-                  <button 
-                    type="button" 
-                    onClick={() => formatTextWithAI('meeting_point')}
-                    disabled={isFormattingMeetingPoint}
-                    className="text-xs bg-white border border-blue-200 text-blue-700 px-3 py-1.5 rounded-full font-bold hover:bg-blue-100 transition flex items-center gap-1.5 disabled:opacity-50"
-                  >
-                    {isFormattingMeetingPoint ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3 text-blue-500" />}
-                    {isFormattingMeetingPoint ? 'Formatando...' : 'Formatar com IA'}
-                  </button>
+                  {!aiSuccessMeeting ? (
+                    <button 
+                      type="button" 
+                      onClick={() => formatTextWithAI('meeting_point')}
+                      disabled={isFormattingMeetingPoint}
+                      className="text-xs bg-white border border-blue-200 text-blue-700 px-3 py-1.5 rounded-full font-bold hover:bg-blue-100 transition flex items-center gap-1.5 disabled:opacity-50"
+                    >
+                      {isFormattingMeetingPoint ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3 text-blue-500" />}
+                      {isFormattingMeetingPoint ? 'Formatando...' : 'Formatar com IA'}
+                    </button>
+                  ) : (
+                    <span className="text-xs text-green-700 bg-green-100 px-3 py-1.5 rounded-full font-bold flex items-center gap-1">
+                      <CheckCircle2 className="h-3 w-3" /> IA Formatou
+                    </span>
+                  )}
                 </div>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -278,20 +319,28 @@ export default function AdminPage() {
                     placeholder="Cole os horários bagunçados aqui e clique no botão mágico acima..." 
                   />
                 </div>
+                {aiSuccessMeeting && <p className="text-xs text-green-600 mt-2 font-medium">✅ Texto organizado com quebras de linha e emojis perfeitos!</p>}
               </div>
 
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-xl border border-purple-100">
+              {/* Botão e Campo com IA para Descrição */}
+              <div className={`p-4 rounded-xl border transition-colors ${aiSuccessDesc ? 'bg-green-50 border-green-200' : 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-100'}`}>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-sm font-bold text-gray-800">Descrição e Recomendações</label>
-                  <button 
-                    type="button" 
-                    onClick={() => formatTextWithAI('description')}
-                    disabled={isFormattingDescription}
-                    className="text-xs bg-white border border-purple-200 text-purple-700 px-3 py-1.5 rounded-full font-bold hover:bg-purple-100 transition flex items-center gap-1.5 disabled:opacity-50"
-                  >
-                    {isFormattingDescription ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3 text-purple-500" />}
-                    {isFormattingDescription ? 'Revisando...' : 'Revisar Ortografia com IA'}
-                  </button>
+                  {!aiSuccessDesc ? (
+                    <button 
+                      type="button" 
+                      onClick={() => formatTextWithAI('description')}
+                      disabled={isFormattingDescription}
+                      className="text-xs bg-white border border-purple-200 text-purple-700 px-3 py-1.5 rounded-full font-bold hover:bg-purple-100 transition flex items-center gap-1.5 disabled:opacity-50"
+                    >
+                      {isFormattingDescription ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3 text-purple-500" />}
+                      {isFormattingDescription ? 'Revisando...' : 'Revisar Ortografia com IA'}
+                    </button>
+                  ) : (
+                    <span className="text-xs text-green-700 bg-green-100 px-3 py-1.5 rounded-full font-bold flex items-center gap-1">
+                      <CheckCircle2 className="h-3 w-3" /> IA Corrigiu
+                    </span>
+                  )}
                 </div>
                 <div className="relative">
                   <FileText className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -302,14 +351,40 @@ export default function AdminPage() {
                     placeholder="Escreva a descrição e clique no botão acima para corrigir os erros..." 
                   />
                 </div>
+                {aiSuccessDesc && <p className="text-xs text-green-600 mt-2 font-medium">✅ Ortografia e espaçamentos revisados pela Inteligência Artificial!</p>}
               </div>
 
-              <div className="grid grid-cols-2 gap-4 pt-2">
-                <div className="border-2 border-dashed border-orange-200 bg-orange-50/50 rounded-xl p-4 text-center hover:bg-orange-50 transition relative">
+              {editingAgenda && (
+                <div className="bg-blue-50 border border-blue-100 p-3 rounded-xl text-sm text-blue-800">
+                  <strong>Dica:</strong> Se você não enviar novas mídias, as antigas continuarão salvas.
+                </div>
+              )}
+
+              {/* Seção de Mídia */}
+              <div className="grid grid-cols-3 gap-4 pt-2">
+                
+                {/* Upload do Flyer/Capa */}
+                <div className="col-span-3 border-2 border-dashed border-[#F17B37] bg-[#F17B37]/5 rounded-xl p-4 text-center hover:bg-[#F17B37]/10 transition relative">
+                  <FileUp className="mx-auto h-6 w-6 text-[#F17B37] mb-2" />
+                  <p className="text-sm text-gray-800 font-bold">{editingAgenda ? 'Substituir Flyer (Capa)' : 'Upload do Flyer/Capa'}</p>
+                  <p className="text-xs text-gray-500 mt-1">Essa imagem irá para o WhatsApp!</p>
+                  <p className="text-xs font-bold text-[#F17B37] mt-1">
+                    {selectedFlyer && selectedFlyer.length > 0 ? `Flyer selecionado` : 'Selecionar'}
+                  </p>
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    {...register("flyer")}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                </div>
+
+                {/* Upload Fotos */}
+                <div className="col-span-2 border-2 border-dashed border-orange-200 bg-orange-50/50 rounded-xl p-4 text-center hover:bg-orange-50 transition relative">
                   <ImageIcon className="mx-auto h-6 w-6 text-orange-400 mb-2" />
-                  <p className="text-sm text-gray-700 font-medium">{editingAgenda ? 'Substituir Fotos' : 'Fotos'}</p>
+                  <p className="text-sm text-gray-700 font-medium">{editingAgenda ? 'Substituir Carrossel de Fotos' : 'Fotos do Local'}</p>
                   <p className="text-xs font-bold text-orange-600 mt-1">
-                    {selectedImages && selectedImages.length > 0 ? `${selectedImages.length} selecionada(s)` : 'Selecionar'}
+                    {selectedImages && selectedImages.length > 0 ? `${selectedImages.length} selecionada(s)` : 'Selecionar Múltiplas'}
                   </p>
                   <input 
                     type="file" 
@@ -320,11 +395,12 @@ export default function AdminPage() {
                   />
                 </div>
 
-                <div className="border-2 border-dashed border-blue-200 bg-blue-50/50 rounded-xl p-4 text-center hover:bg-blue-50 transition relative">
-                  <Video className="mx-auto h-6 w-6 text-blue-400 mb-2" />
-                  <p className="text-sm text-gray-700 font-medium">{editingAgenda ? 'Substituir Vídeo' : '1 Vídeo (Opcional)'}</p>
+                {/* Upload Vídeo */}
+                <div className="col-span-1 border-2 border-dashed border-blue-200 bg-blue-50/50 rounded-xl p-4 text-center hover:bg-blue-50 transition relative flex flex-col justify-center">
+                  <Video className="mx-auto h-6 w-6 text-blue-400 mb-1" />
+                  <p className="text-xs text-gray-700 font-medium">{editingAgenda ? 'Novo Vídeo' : 'Vídeo (Opcional)'}</p>
                   <p className="text-xs font-bold text-blue-600 mt-1">
-                    {selectedVideo && selectedVideo.length > 0 ? `Vídeo pronto` : 'Selecionar'}
+                    {selectedVideo && selectedVideo.length > 0 ? `Vídeo ok` : 'Selecionar'}
                   </p>
                   <input 
                     type="file" 

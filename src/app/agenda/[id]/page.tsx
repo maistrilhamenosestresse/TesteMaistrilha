@@ -60,20 +60,22 @@ export default function AgendaDetailsPage() {
   const whatsappMessage = `Oi, Nívea, eu quero uma vaga para a trilha ${agenda.title} do dia ${eventDate}`;
   const whatsappUrl = `https://wa.me/5531998793939?text=${encodeURIComponent(whatsappMessage)}`;
 
-  // Compartilhamento nativo da Trilha
+  // Compartilhamento nativo da Trilha com Flyer
   const handleShare = async () => {
+    // Texto que vai direto pro WhatsApp
+    const whatsappText = `🌿 *Trilha: ${agenda.title}*\n📅 Data: ${eventDate}\n💰 Valor: R$ ${agenda.price}\n\n👇 *Confira o Flyer oficial:*\n${agenda.flyer_url || agenda.images?.[0] || window.location.href}\n\n✨ *Garanta sua vaga e veja o roteiro completo aqui:*\n${window.location.href}`;
+
     const shareData = {
       title: `Trilha: ${agenda.title} | Mais Trilha Menos Estresse`,
-      text: `Olha essa aventura incrível na data ${eventDate} por R$ ${agenda.price}! Vamos nessa?`,
-      url: window.location.href,
+      text: whatsappText,
     };
 
     try {
       if (navigator.share) {
         await navigator.share(shareData);
       } else {
-        await navigator.clipboard.writeText(window.location.href);
-        alert("Link da aventura copiado para a área de transferência!");
+        await navigator.clipboard.writeText(whatsappText);
+        alert("Texto e link copiados! Agora é só colar no WhatsApp.");
       }
     } catch (err) {
       console.log('Compartilhamento cancelado ou falhou', err);
@@ -157,7 +159,7 @@ export default function AgendaDetailsPage() {
               <MapPin className="text-[#F17B37] shrink-0 mt-1" />
               <div>
                 <h3 className="font-semibold text-lg">Ponto de Encontro</h3>
-                <p className="text-gray-400 text-sm leading-relaxed mt-1">{agenda.meeting_point}</p>
+                <p className="text-gray-300 text-sm leading-relaxed mt-1 whitespace-pre-wrap">{agenda.meeting_point}</p>
               </div>
             </div>
           </div>

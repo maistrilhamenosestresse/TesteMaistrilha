@@ -46,7 +46,7 @@ export async function POST(request: Request) {
       const audioPart = {
         inlineData: {
           data: audioBase64,
-          mimeType: mimeType || "audio/webm",
+          mimeType: mimeType || "audio/mp3",
         },
       };
       result = await model.generateContent([prompt, audioPart]);

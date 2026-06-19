@@ -79,7 +79,7 @@ export default function AgendaList() {
             <p className="text-sm text-gray-500 mt-2">Nenhuma trilha futura cadastrada no momento.</p>
           </motion.div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
             {agendas.map((agenda, index) => {
               // Corrigir fuso horário para não diminuir 1 dia (-03:00)
               const eventDate = new Date(agenda.date + 'T12:00:00Z');
@@ -92,42 +92,42 @@ export default function AgendaList() {
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="bg-white/5 border border-white/10 rounded-[2rem] overflow-hidden hover:bg-white/10 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#F17B37]/10 relative h-full flex flex-col"
+                    className="bg-white/5 border border-white/10 rounded-2xl md:rounded-[2rem] overflow-hidden hover:bg-white/10 transition-all duration-300 md:hover:-translate-y-2 md:hover:shadow-2xl hover:shadow-[#F17B37]/10 relative h-full flex flex-col"
                   >
                     
                     {/* Imagem de Capa do Card */}
-                    <div className="h-48 relative overflow-hidden shrink-0">
+                    <div className="h-32 md:h-48 relative overflow-hidden shrink-0">
                       <div className="absolute inset-0 bg-gradient-to-t from-[#1a2332] to-transparent z-10" />
                       {agenda.images && agenda.images.length > 0 ? (
                         <img src={agenda.images[0]} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" alt="Capa" />
                       ) : (
-                        <div className="w-full h-full bg-gray-800 flex items-center justify-center"><ImageIcon className="text-gray-600 h-10 w-10" /></div>
+                        <div className="w-full h-full bg-gray-800 flex items-center justify-center"><ImageIcon className="text-gray-600 h-8 w-8 md:h-10 md:w-10" /></div>
                       )}
                       
                       {/* Badge da Data */}
-                      <div className="absolute top-4 left-4 z-20 bg-black/60 backdrop-blur-md border border-white/10 rounded-2xl p-2 px-4 text-center shadow-xl">
-                        <p className="text-[#F17B37] font-bold tracking-widest text-[10px] uppercase mb-0.5">{month}</p>
-                        <p className="text-2xl font-black leading-none">{day}</p>
+                      <div className="absolute top-2 left-2 md:top-4 md:left-4 z-20 bg-black/60 backdrop-blur-md border border-white/10 rounded-xl md:rounded-2xl p-1.5 md:p-2 px-2 md:px-4 text-center shadow-xl">
+                        <p className="text-[#F17B37] font-bold tracking-widest text-[8px] md:text-[10px] uppercase mb-0.5">{month}</p>
+                        <p className="text-lg md:text-2xl font-black leading-none">{day}</p>
                       </div>
                     </div>
 
                     {/* Conteúdo */}
-                    <div className="p-6 flex-1 flex flex-col relative z-20 bg-[#1a2332]">
-                      <h3 className="text-xl font-bold mb-4 group-hover:text-[#F17B37] transition line-clamp-2">{agenda.title}</h3>
+                    <div className="p-3 md:p-6 flex-1 flex flex-col relative z-20 bg-[#1a2332]">
+                      <h3 className="text-sm md:text-xl font-bold mb-2 md:mb-4 group-hover:text-[#F17B37] transition line-clamp-2">{agenda.title}</h3>
                       
-                      <div className="space-y-3 mb-6 mt-auto">
-                        <div className="flex items-start gap-3 text-sm text-gray-400">
-                          <MapPin className="h-4 w-4 text-[#F17B37] shrink-0 mt-0.5" />
-                          <span className="line-clamp-2">{agenda.meeting_point}</span>
+                      <div className="space-y-2 md:space-y-3 mb-4 md:mb-6 mt-auto">
+                        <div className="flex items-start gap-1.5 md:gap-3 text-xs md:text-sm text-gray-400">
+                          <MapPin className="h-3 w-3 md:h-4 md:w-4 text-[#F17B37] shrink-0 mt-0.5" />
+                          <span className="line-clamp-1 md:line-clamp-2">{agenda.meeting_point}</span>
                         </div>
-                        <div className="flex items-center gap-3 text-sm text-gray-400">
-                          <DollarSign className="h-4 w-4 text-[#25D366]" />
+                        <div className="flex items-center gap-1.5 md:gap-3 text-xs md:text-sm text-gray-400">
+                          <DollarSign className="h-3 w-3 md:h-4 md:w-4 text-[#25D366]" />
                           <span className="font-semibold text-white">R$ {agenda.price}</span>
                         </div>
                       </div>
 
-                      <div className="inline-flex w-full justify-center items-center text-[#F17B37] text-sm font-bold uppercase tracking-wide bg-[#F17B37]/10 px-4 py-3 rounded-xl group-hover:bg-[#F17B37] group-hover:text-white transition">
-                        Acessar Roteiro <ChevronRight className="h-4 w-4 ml-1" />
+                      <div className="inline-flex w-full justify-center items-center text-[#F17B37] text-[10px] md:text-sm font-bold uppercase tracking-wide bg-[#F17B37]/10 px-2 py-2 md:px-4 md:py-3 rounded-lg md:rounded-xl group-hover:bg-[#F17B37] group-hover:text-white transition">
+                        Acessar <ChevronRight className="h-3 w-3 md:h-4 md:w-4 ml-1" />
                       </div>
                     </div>
                   </motion.div>

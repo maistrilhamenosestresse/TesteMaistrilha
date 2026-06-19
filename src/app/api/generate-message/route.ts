@@ -5,45 +5,57 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(request: Request) {
   try {
-    const { text, type } = await request.json();
+    const { text, audioBase64, mimeType, type } = await request.json();
 
-    if (!text) {
-      return NextResponse.json({ error: 'Texto é obrigatório' }, { status: 400 });
+    if (!text && !audioBase64) {
+      return NextResponse.json({ error: 'Texto ou Áudio é obrigatório' }, { status: 400 });
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Usando 1.5-flash pois é muito bom para áudio também
 
     let prompt = "";
     
     if (type === 'meeting_point') {
       prompt = `
       Atue como um redator profissional de turismo e aventuras.
-      Você receberá um texto bagunçado sobre os "Pontos de Embarque e Horários".
+      Você receberá um texto bagunçado ou um ÁUDIO com os "Pontos de Embarque e Horários".
       Sua tarefa é:
-      1. Corrigir todos os erros de ortografia e gramática.
-      2. Formatar os pontos de embarque como uma lista vertical bonita e clara, utilizando quebras de linha e emojis apropriados.
-      3. Destacar os horários.
-      4. Manter o tom amigável e claro. Não adicione informações que não estão no texto. Apenas retorne o texto formatado.
-
-      Texto original:
-      "${text}"
+      1. Ouvir/Ler atentamente.
+      2. Corrigir todos os erros de ortografia e gramática.
+      3. Formatar os pontos de embarque como uma lista vertical bonita e clara, utilizando quebras de linha e emojis apropriados.
+      4. Destacar os horários.
+      5. Apenas retorne o texto formatado. Não converse comigo.
       `;
     } else {
       prompt = `
       Atue como um redator profissional de ecoturismo e trilhas.
-      Você receberá a "Descrição e Recomendações" de uma trilha.
+      Você receberá a "Descrição e Recomendações" de uma trilha em texto ou ÁUDIO.
       Sua tarefa é:
-      1. Corrigir todos os erros de ortografia, pontuação e concordância.
-      2. Formatar o texto para leitura agradável com parágrafos bem espaçados.
-      3. Se houver listas (como o que levar), utilize bullet points ou emojis organizados.
-      4. Apenas retorne o texto melhorado.
-
-      Texto original:
-      "${text}"
+      1. Ouvir/Ler atentamente.
+      2. Transcrever e corrigir todos os erros de ortografia e pontuação.
+      3. Formatar o texto para leitura agradável com parágrafos.
+      4. Utilizar bullet points ou emojis organizados se houver listas de recomendações.
+      5. Apenas retorne o texto formatado. Não converse comigo.
       `;
     }
 
-    const result = await model.generateContent(prompt);
+    let result;
+    
+    if (audioBase64) {
+      // Processar Áudio
+      const audioPart = {
+        inlineData: {
+          data: audioBase64,
+          mimeType: mimeType || "audio/webm",
+        },
+      };
+      result = await model.generateContent([prompt, audioPart]);
+    } else {
+      // Processar Texto
+      prompt += `\n\nTexto original:\n"${text}"`;
+      result = await model.generateContent(prompt);
+    }
+
     const response = await result.response;
     const formattedText = response.text();
 

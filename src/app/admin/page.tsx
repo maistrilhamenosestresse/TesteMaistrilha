@@ -347,7 +347,7 @@ export default function AdminPage() {
     }
   };
 
-  const globalSiteUrl = "https://maitrilhaadm.vercel.app/agenda";
+  const globalSiteUrl = "https://maistrilha.vercel.app/agenda";
   const whatsappMessage = `⛰️ A nossa agenda oficial chegou! Prepare as botas!\n\nClique no link abaixo para conferir as nossas próximas trilhas, ver as fotos, roteiros e garantir sua vaga:\n\n👉 ${globalSiteUrl}`;
   const whatsappLink = `https://wa.me/?text=${encodeURIComponent(whatsappMessage)}`;
 

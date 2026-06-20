@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
-import { Calendar, MapPin, DollarSign, FileText, Send, Image as ImageIcon, Video, Loader2, Trash2, CalendarDays, Edit2, Sparkles, CheckCircle2, FileUp, Mic, Square, Navigation, Camera, AlertCircle, Bot, X } from "lucide-react";
+import { Calendar, MapPin, DollarSign, FileText, Send, Image as ImageIcon, Video, Loader2, Trash2, CalendarDays, Edit2, Sparkles, CheckCircle2, FileUp, Mic, Square, Navigation, Camera, AlertCircle, Bot, X, MessageSquare, Plus } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 type AgendaForm = {
@@ -15,6 +15,11 @@ type AgendaForm = {
   flyer: FileList;
   images: FileList;
   video: FileList;
+};
+
+type ChatMessage = {
+  sender: 'user' | 'bot';
+  text: string;
 };
 
 export default function AdminPage() {
@@ -35,11 +40,12 @@ export default function AdminPage() {
   const [recordingTime, setRecordingTime] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Estados do Agente Assistente
+  // Estados do Agente Assistente (Chat)
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [isAssistantProcessing, setIsAssistantProcessing] = useState(false);
-  const [assistantTranscript, setAssistantTranscript] = useState("");
-  const [generatedFlyerUrl, setGeneratedFlyerUrl] = useState<string | null>(null);
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([{ sender: 'bot', text: 'Olá! Sou sua assistente. Pergunte qualquer coisa ou me mande cadastrar uma trilha!' }]);
+  const [chatInput, setChatInput] = useState("");
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
 
   const selectedFlyer = watch("flyer");
   const selectedImages = watch("images");
@@ -67,6 +73,12 @@ export default function AdminPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatHistory, isAssistantProcessing]);
+
   const deleteAgenda = async (id: string) => {
     if (!window.confirm("Tem certeza que deseja excluir esta trilha?")) return;
     try {
@@ -86,7 +98,6 @@ export default function AdminPage() {
     setValue("price", agenda.price.toString().replace('.', ','));
     setValue("meeting_point", agenda.meeting_point);
     setValue("description", agenda.description);
-    setGeneratedFlyerUrl(null); // Resetar flyer gerado se for editar
     setAiSuccessMeeting(false);
     setAiSuccessDesc(false);
     setActiveTab('geral');
@@ -97,7 +108,6 @@ export default function AdminPage() {
     setEditingAgenda(null);
     setAiSuccessMeeting(false);
     setAiSuccessDesc(false);
-    setGeneratedFlyerUrl(null);
     setActiveTab('geral');
     reset();
   };
@@ -127,7 +137,7 @@ export default function AdminPage() {
       recognition.onstart = () => {
         setRecordingType(type);
         setRecordingTime(0);
-        if (type === 'assistant') setAssistantTranscript("");
+        if (type === 'assistant') setChatInput("");
         if (timerRef.current) clearInterval(timerRef.current);
         timerRef.current = setInterval(() => setRecordingTime(prev => prev + 1), 1000);
       };
@@ -144,7 +154,7 @@ export default function AdminPage() {
         
         const currentText = finalTranscript + interimTranscript;
         if (type === 'assistant') {
-          setAssistantTranscript(currentText);
+          setChatInput(currentText);
         } else {
           setValue(type, initialText + (initialText ? "\n" : "") + currentText);
         }
@@ -161,8 +171,8 @@ export default function AdminPage() {
       recognition.onend = () => {
         stopRecording();
         if (type === 'assistant') {
-          if (finalTranscript.trim().length > 5) {
-            processAssistantVoice(finalTranscript);
+          if (finalTranscript.trim().length > 3) {
+            handleSendChatMessage(finalTranscript.trim());
           }
         } else {
           formatTextWithAI(type);
@@ -186,39 +196,43 @@ export default function AdminPage() {
     if (timerRef.current) clearInterval(timerRef.current);
   };
 
-  const processAssistantVoice = async (transcript: string) => {
+  const handleSendChatMessage = async (text: string) => {
+    if (!text.trim()) return;
+    
+    const userMsg = text.trim();
+    setChatInput("");
+    setChatHistory(prev => [...prev, { sender: 'user', text: userMsg }]);
     setIsAssistantProcessing(true);
+
     try {
       const res = await fetch("/api/generate-full-agenda", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: transcript })
+        body: JSON.stringify({ text: userMsg, history: chatHistory.slice(-5) }) // Manda as ultimas mensagens de contexto
       });
       const data = await res.json();
       
       if (data.result) {
-        setValue('title', data.result.title);
-        if (data.result.date) setValue('date', data.result.date);
-        setValue('price', data.result.price);
-        setValue('meeting_point', data.result.meeting_point);
-        setValue('description', data.result.description);
-        
-        if (data.result.flyerUrl) {
-          setGeneratedFlyerUrl(data.result.flyerUrl);
+        if (data.result.type === 'chat') {
+          setChatHistory(prev => [...prev, { sender: 'bot', text: data.result.message }]);
+        } else if (data.result.type === 'agenda') {
+          setValue('title', data.result.title);
+          if (data.result.date) setValue('date', data.result.date);
+          setValue('price', data.result.price);
+          setValue('meeting_point', data.result.meeting_point);
+          setValue('description', data.result.description);
+          
+          setChatHistory(prev => [...prev, { sender: 'bot', text: `✨ Prontinho! Acabei de preencher os dados da trilha "${data.result.title}" no painel pra você. Se precisar, pode editar ou apenas clicar em Cadastrar!` }]);
+          setActiveTab('geral');
         }
-        
-        setIsAssistantOpen(false); // Fecha o modal
-        setActiveTab('geral'); // Mostra os resultados na aba principal
-        alert("A IA preencheu a trilha com sucesso! Revise os dados, as fotos e o flyer, e depois clique em Salvar.");
       } else {
-        alert("Erro na resposta da IA: " + (data.error || ''));
+        setChatHistory(prev => [...prev, { sender: 'bot', text: "❌ Desculpe, deu um erro aqui no meu servidor. Tente novamente." }]);
       }
     } catch (error) {
       console.error(error);
-      alert("Falha de conexão com a IA.");
+      setChatHistory(prev => [...prev, { sender: 'bot', text: "❌ Falha de conexão. A internet caiu?" }]);
     } finally {
       setIsAssistantProcessing(false);
-      setAssistantTranscript("");
     }
   };
 
@@ -267,7 +281,7 @@ export default function AdminPage() {
     try {
       let imageUrls: string[] = editingAgenda ? editingAgenda.images || [] : [];
       let videoUrl: string | null = editingAgenda ? editingAgenda.video_url : null;
-      let flyerUrl: string | null = editingAgenda ? editingAgenda.flyer_url : generatedFlyerUrl; // Usa o flyer gerado caso nao tenha edição
+      let flyerUrl: string | null = editingAgenda ? editingAgenda.flyer_url : null;
       
       if (data.flyer && data.flyer.length > 0) {
         const file = data.flyer[0];
@@ -323,7 +337,6 @@ export default function AdminPage() {
         if (insertError) throw insertError;
         alert("Trilha cadastrada com sucesso!");
         reset();
-        setGeneratedFlyerUrl(null);
       }
       
       setAiSuccessMeeting(false);
@@ -532,26 +545,12 @@ export default function AdminPage() {
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="border-2 border-dashed border-[#F17B37] bg-[#F17B37]/5 rounded-xl p-6 text-center hover:bg-[#F17B37]/10 transition relative group flex flex-col items-center">
-                      
-                      {generatedFlyerUrl ? (
-                        <div className="absolute inset-0 w-full h-full p-2">
-                          <img src={generatedFlyerUrl} alt="Flyer Gerado" className="w-full h-full object-contain rounded-lg shadow-md border border-[#F17B37]/30" />
-                          <div className="absolute top-4 right-4 bg-black/60 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur">
-                            ✨ Gerado por IA
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <FileUp className="mx-auto h-8 w-8 text-[#F17B37] mb-3 group-hover:scale-110 transition" />
-                          <p className="text-base text-gray-800 font-bold">{editingAgenda ? 'Substituir Flyer Principal' : 'Flyer/Capa (Para WhatsApp)'}</p>
-                          <p className="text-sm font-bold text-[#F17B37] mt-2 bg-white inline-block px-4 py-1 rounded-full shadow-sm">
-                            {selectedFlyer && selectedFlyer.length > 0 ? `Flyer selecionado` : 'Toque para Selecionar'}
-                          </p>
-                        </>
-                      )}
-                      
-                      {/* Upload manual sobrepõe a imagem gerada se for clicado */}
-                      <input type="file" accept="image/*" {...register("flyer")} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" title="Trocar imagem" />
+                      <FileUp className="mx-auto h-8 w-8 text-[#F17B37] mb-3 group-hover:scale-110 transition" />
+                      <p className="text-base text-gray-800 font-bold">{editingAgenda ? 'Substituir Flyer Principal' : 'Flyer/Capa (Para WhatsApp)'}</p>
+                      <p className="text-sm font-bold text-[#F17B37] mt-2 bg-white inline-block px-4 py-1 rounded-full shadow-sm">
+                        {selectedFlyer && selectedFlyer.length > 0 ? `Flyer selecionado` : 'Toque para Selecionar'}
+                      </p>
+                      <input type="file" accept="image/*" {...register("flyer")} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
                     </div>
 
                     <div className="border-2 border-dashed border-orange-200 bg-orange-50/50 rounded-xl p-6 text-center hover:bg-orange-50 transition relative group">
@@ -689,73 +688,102 @@ export default function AdminPage() {
       <button
         onClick={() => setIsAssistantOpen(true)}
         className="fixed bottom-[90px] md:bottom-8 right-4 md:right-8 bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 rounded-full shadow-[0_0_20px_rgba(124,58,237,0.4)] hover:scale-110 transition-transform z-40 animate-bounce"
-        title="Assistente IA (Gerar Tudo)"
+        title="Assistente IA (Chat Mágico)"
       >
         <Bot className="h-7 w-7" />
       </button>
 
-      {/* MODAL DO ASSISTENTE IA */}
+      {/* MODAL DO ASSISTENTE IA (CHAT HÍBRIDO) */}
       {isAssistantOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-300">
+          <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-300 flex flex-col h-[85vh] max-h-[800px]">
             
-            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-white flex justify-between items-center">
-              <div>
-                <h3 className="font-bold text-xl flex items-center gap-2"><Bot className="h-6 w-6" /> Assistente IA</h3>
-                <p className="text-purple-100 text-sm mt-1">Dite a trilha completa e o flyer</p>
+            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-4 text-white flex justify-between items-center shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 p-2 rounded-full"><Bot className="h-6 w-6" /></div>
+                <div>
+                  <h3 className="font-bold text-lg leading-tight">Assistente IA</h3>
+                  <p className="text-purple-100 text-xs mt-0.5">Converse ou mande cadastrar trilhas</p>
+                </div>
               </div>
               <button onClick={() => { setIsAssistantOpen(false); stopRecording(); }} className="bg-white/10 hover:bg-white/20 p-2 rounded-full transition">
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="p-8 flex flex-col items-center text-center space-y-6 bg-gray-50">
-              
-              {isAssistantProcessing ? (
-                <div className="py-8 flex flex-col items-center gap-4">
-                  <div className="relative w-20 h-20">
-                    <div className="absolute inset-0 bg-purple-500 rounded-full animate-ping opacity-20"></div>
-                    <div className="relative bg-white rounded-full p-4 shadow-lg flex items-center justify-center h-full w-full">
-                      <Loader2 className="h-8 w-8 text-purple-600 animate-spin" />
-                    </div>
+            <div className="flex-1 bg-gray-50 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+              {chatHistory.map((msg, idx) => (
+                <div key={idx} className={`flex w-full ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm ${
+                    msg.sender === 'user' 
+                      ? 'bg-purple-600 text-white rounded-br-none shadow-sm' 
+                      : 'bg-white border border-gray-200 text-gray-800 rounded-bl-none shadow-sm whitespace-pre-wrap'
+                  }`}>
+                    {msg.text}
                   </div>
-                  <h4 className="font-bold text-gray-800 text-lg">Criando sua Trilha Mágica...</h4>
-                  <p className="text-sm text-gray-500 max-w-xs">
-                    Lendo o roteiro, identificando o local e desenhando o seu flyer. Isso pode levar até 20 segundos!
-                  </p>
                 </div>
-              ) : (
-                <>
-                  <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 w-full text-left text-sm text-gray-600 italic h-24 overflow-y-auto custom-scrollbar">
-                    {assistantTranscript ? `"${assistantTranscript}"` : "Exemplo: 'Cria uma trilha pra Serra do Cipó dia 20 de maio, custa R$ 150. O embarque é às 5 da manhã no Terminal. Gera um flyer com cachoeira...'"}
+              ))}
+              
+              {isAssistantProcessing && (
+                <div className="flex w-full justify-start">
+                  <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-none px-4 py-3 flex gap-1.5 shadow-sm">
+                    <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></span>
+                    <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+                    <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></span>
                   </div>
+                </div>
+              )}
+              <div ref={chatEndRef} />
+            </div>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (recordingType === 'assistant') {
-                        stopRecording();
-                        if (assistantTranscript.length > 5) processAssistantVoice(assistantTranscript);
-                      } else {
-                        startRecording('assistant');
+            <div className="bg-white border-t border-gray-100 p-3 shrink-0">
+              <div className="flex items-end gap-2 bg-gray-50 border border-gray-200 p-1.5 rounded-3xl focus-within:border-purple-400 focus-within:ring-1 focus-within:ring-purple-400 transition-all">
+                <textarea 
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      if (!isAssistantProcessing && recordingType !== 'assistant') {
+                        handleSendChatMessage(chatInput);
                       }
+                    }
+                  }}
+                  placeholder="Digite ou grave áudio..."
+                  className="flex-1 max-h-32 min-h-[44px] bg-transparent outline-none p-3 text-sm resize-none custom-scrollbar"
+                  rows={1}
+                />
+                
+                {chatInput.trim() ? (
+                  <button 
+                    onClick={() => handleSendChatMessage(chatInput)}
+                    disabled={isAssistantProcessing || recordingType === 'assistant'}
+                    className="bg-purple-600 text-white h-11 w-11 rounded-full flex items-center justify-center shrink-0 hover:bg-purple-700 transition-colors disabled:opacity-50"
+                  >
+                    <Send className="h-5 w-5 ml-1" />
+                  </button>
+                ) : (
+                  <button 
+                    onClick={() => {
+                      if (recordingType === 'assistant') stopRecording();
+                      else startRecording('assistant');
                     }}
-                    className={`w-24 h-24 rounded-full flex items-center justify-center shadow-lg transition-all ${
+                    disabled={isAssistantProcessing}
+                    className={`h-11 w-11 rounded-full flex items-center justify-center shrink-0 transition-all ${
                       recordingType === 'assistant' 
-                        ? 'bg-red-500 text-white animate-pulse ring-8 ring-red-500/20' 
-                        : 'bg-white border-4 border-purple-100 text-purple-600 hover:bg-purple-50 hover:border-purple-200'
+                        ? 'bg-red-500 text-white animate-pulse' 
+                        : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'
                     }`}
                   >
-                    {recordingType === 'assistant' ? <Square className="h-8 w-8 fill-white" /> : <Mic className="h-10 w-10" />}
+                    {recordingType === 'assistant' ? <Square className="h-5 w-5 fill-white" /> : <Mic className="h-5 w-5" />}
                   </button>
-
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                    {recordingType === 'assistant' ? `Gravando... ${formatRecordingTime(recordingTime)}` : 'Toque para Falar'}
-                  </p>
-                </>
+                )}
+              </div>
+              {recordingType === 'assistant' && (
+                <p className="text-center text-xs text-red-500 font-bold mt-2 animate-pulse">Gravando... {formatRecordingTime(recordingTime)}</p>
               )}
-
             </div>
+
           </div>
         </div>
       )}

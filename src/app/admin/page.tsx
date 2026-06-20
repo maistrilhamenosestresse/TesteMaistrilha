@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
-import { Calendar, MapPin, DollarSign, FileText, Send, Image as ImageIcon, Video, Loader2, Trash2, CalendarDays, Edit2, Sparkles, CheckCircle2, FileUp, Mic, Square, Navigation, Camera, AlertCircle } from "lucide-react";
+import { Calendar, MapPin, DollarSign, FileText, Send, Image as ImageIcon, Video, Loader2, Trash2, CalendarDays, Edit2, Sparkles, CheckCircle2, FileUp, Mic, Square, Navigation, Camera, AlertCircle, Bot, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 type AgendaForm = {
@@ -24,22 +24,23 @@ export default function AdminPage() {
   const [isFetching, setIsFetching] = useState(true);
   const [editingAgenda, setEditingAgenda] = useState<any>(null);
   
-  // Abas do Formulario (Fim do Scroll)
   const [activeTab, setActiveTab] = useState<'geral' | 'textos' | 'midias'>('geral');
 
-  // Status de Formatação e Áudio
   const [isFormattingMeetingPoint, setIsFormattingMeetingPoint] = useState(false);
   const [isFormattingDescription, setIsFormattingDescription] = useState(false);
   const [aiSuccessMeeting, setAiSuccessMeeting] = useState(false);
   const [aiSuccessDesc, setAiSuccessDesc] = useState(false);
 
-  // Estados do Gravador de Áudio
-  const [recordingType, setRecordingType] = useState<'meeting_point' | 'description' | null>(null);
+  const [recordingType, setRecordingType] = useState<'meeting_point' | 'description' | 'assistant' | null>(null);
   const [recordingTime, setRecordingTime] = useState(0);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   
+  // Estados do Agente Assistente
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
+  const [isAssistantProcessing, setIsAssistantProcessing] = useState(false);
+  const [assistantTranscript, setAssistantTranscript] = useState("");
+  const [generatedFlyerUrl, setGeneratedFlyerUrl] = useState<string | null>(null);
+
   const selectedFlyer = watch("flyer");
   const selectedImages = watch("images");
   const selectedVideo = watch("video");
@@ -85,6 +86,7 @@ export default function AdminPage() {
     setValue("price", agenda.price.toString().replace('.', ','));
     setValue("meeting_point", agenda.meeting_point);
     setValue("description", agenda.description);
+    setGeneratedFlyerUrl(null); // Resetar flyer gerado se for editar
     setAiSuccessMeeting(false);
     setAiSuccessDesc(false);
     setActiveTab('geral');
@@ -95,13 +97,13 @@ export default function AdminPage() {
     setEditingAgenda(null);
     setAiSuccessMeeting(false);
     setAiSuccessDesc(false);
+    setGeneratedFlyerUrl(null);
     setActiveTab('geral');
     reset();
   };
 
-  const startRecording = async (type: 'meeting_point' | 'description') => {
+  const startRecording = async (type: 'meeting_point' | 'description' | 'assistant') => {
     try {
-      // Usar a API Nativa de Reconhecimento de Voz do Celular/Navegador
       const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
       
       if (!SpeechRecognition) {
@@ -109,7 +111,6 @@ export default function AdminPage() {
         return;
       }
 
-      // Evita erro ao clicar rápido demais (já tem um rodando)
       if ((window as any).currentRecognition) {
         try { (window as any).currentRecognition.stop(); } catch(e) {}
         (window as any).currentRecognition = null;
@@ -120,13 +121,13 @@ export default function AdminPage() {
       recognition.continuous = true;
       recognition.interimResults = true;
 
-      // Guarda o texto inicial caso o usuário já tenha digitado algo
-      const initialText = getValues(type) || "";
+      const initialText = type === 'assistant' ? "" : (getValues(type) || "");
       let finalTranscript = "";
 
       recognition.onstart = () => {
         setRecordingType(type);
         setRecordingTime(0);
+        if (type === 'assistant') setAssistantTranscript("");
         if (timerRef.current) clearInterval(timerRef.current);
         timerRef.current = setInterval(() => setRecordingTime(prev => prev + 1), 1000);
       };
@@ -140,33 +141,39 @@ export default function AdminPage() {
             interimTranscript += event.results[i][0].transcript;
           }
         }
-        // Atualiza a tela em tempo real com o que ele está falando
-        setValue(type, initialText + (initialText ? "\n" : "") + finalTranscript + interimTranscript);
+        
+        const currentText = finalTranscript + interimTranscript;
+        if (type === 'assistant') {
+          setAssistantTranscript(currentText);
+        } else {
+          setValue(type, initialText + (initialText ? "\n" : "") + currentText);
+        }
       };
 
       recognition.onerror = (event: any) => {
         console.error("Erro no reconhecimento de voz:", event.error);
         if (event.error !== 'aborted' && event.error !== 'no-speech') {
-          // Apenas mostra erro se não for o usuário cancelando ou silêncio
           alert("Erro ao captar a voz: " + event.error);
         }
         stopRecording();
       };
 
       recognition.onend = () => {
-        // Se a gravação foi encerrada de propósito pelo botão, o recordingType vai ser null (no stopRecording)
-        // Mas se parar sozinho, a gente força a formatação.
         stopRecording();
-        formatTextWithAI(type);
+        if (type === 'assistant') {
+          if (finalTranscript.trim().length > 5) {
+            processAssistantVoice(finalTranscript);
+          }
+        } else {
+          formatTextWithAI(type);
+        }
       };
 
-      // Guardar a referência para poder parar manualmente
       (window as any).currentRecognition = recognition;
       recognition.start();
 
     } catch (err) {
       console.error("Erro ao iniciar microfone", err);
-      // alert silencioso para erros duplicados
     }
   };
 
@@ -179,36 +186,39 @@ export default function AdminPage() {
     if (timerRef.current) clearInterval(timerRef.current);
   };
 
-  const processAudioWithAI = async (audioBase64: string, type: 'meeting_point' | 'description', mimeType: string) => {
-    if (type === 'meeting_point') {
-      setIsFormattingMeetingPoint(true);
-      setAiSuccessMeeting(false);
-    } else {
-      setIsFormattingDescription(true);
-      setAiSuccessDesc(false);
-    }
-
+  const processAssistantVoice = async (transcript: string) => {
+    setIsAssistantProcessing(true);
     try {
-      const res = await fetch("/api/generate-message", {
+      const res = await fetch("/api/generate-full-agenda", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ audioBase64, mimeType, type })
+        body: JSON.stringify({ text: transcript })
       });
       const data = await res.json();
       
       if (data.result) {
-        setValue(type, data.result);
-        if (type === 'meeting_point') setAiSuccessMeeting(true);
-        else setAiSuccessDesc(true);
+        setValue('title', data.result.title);
+        if (data.result.date) setValue('date', data.result.date);
+        setValue('price', data.result.price);
+        setValue('meeting_point', data.result.meeting_point);
+        setValue('description', data.result.description);
+        
+        if (data.result.flyerUrl) {
+          setGeneratedFlyerUrl(data.result.flyerUrl);
+        }
+        
+        setIsAssistantOpen(false); // Fecha o modal
+        setActiveTab('geral'); // Mostra os resultados na aba principal
+        alert("A IA preencheu a trilha com sucesso! Revise os dados, as fotos e o flyer, e depois clique em Salvar.");
       } else {
-        alert("Erro na IA: " + (data.error || 'Falha ao transcrever o áudio. Tente falar mais perto do celular.'));
+        alert("Erro na resposta da IA: " + (data.error || ''));
       }
     } catch (error) {
       console.error(error);
       alert("Falha de conexão com a IA.");
     } finally {
-      if (type === 'meeting_point') setIsFormattingMeetingPoint(false);
-      else setIsFormattingDescription(false);
+      setIsAssistantProcessing(false);
+      setAssistantTranscript("");
     }
   };
 
@@ -257,7 +267,7 @@ export default function AdminPage() {
     try {
       let imageUrls: string[] = editingAgenda ? editingAgenda.images || [] : [];
       let videoUrl: string | null = editingAgenda ? editingAgenda.video_url : null;
-      let flyerUrl: string | null = editingAgenda ? editingAgenda.flyer_url : null;
+      let flyerUrl: string | null = editingAgenda ? editingAgenda.flyer_url : generatedFlyerUrl; // Usa o flyer gerado caso nao tenha edição
       
       if (data.flyer && data.flyer.length > 0) {
         const file = data.flyer[0];
@@ -313,6 +323,7 @@ export default function AdminPage() {
         if (insertError) throw insertError;
         alert("Trilha cadastrada com sucesso!");
         reset();
+        setGeneratedFlyerUrl(null);
       }
       
       setAiSuccessMeeting(false);
@@ -343,7 +354,7 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-28 md:pb-12 text-gray-900">
+    <div className="min-h-screen bg-gray-50 pb-28 md:pb-12 text-gray-900 relative">
       <div className="p-4 md:p-12 max-w-6xl mx-auto space-y-6 md:space-y-8">
         
         <header className="space-y-1 md:space-y-2">
@@ -355,7 +366,6 @@ export default function AdminPage() {
           
           <div className={`bg-white rounded-2xl shadow-sm border transition-all ${editingAgenda ? 'border-orange-500 ring-4 ring-orange-500/10' : 'border-gray-100'} overflow-hidden`}>
             
-            {/* Header do Form */}
             <div className="p-4 md:p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
               <h2 className="text-lg font-bold flex items-center gap-2">
                 <CalendarDays className={`h-5 w-5 ${editingAgenda ? 'text-orange-600' : 'text-orange-500'}`} /> 
@@ -366,7 +376,6 @@ export default function AdminPage() {
               )}
             </div>
 
-            {/* Sistema de Abas (Tabs) */}
             <div className="flex border-b border-gray-100 bg-white sticky top-0 z-20">
               <button 
                 type="button"
@@ -393,7 +402,6 @@ export default function AdminPage() {
             
             <form id="admin-form" onSubmit={handleSubmit(onSubmit)} className="p-4 md:p-6 min-h-[300px]">
               
-              {/* ABA 1: Dados Gerais */}
               {activeTab === 'geral' && (
                 <div className="space-y-4 md:space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div>
@@ -441,11 +449,9 @@ export default function AdminPage() {
                 </div>
               )}
 
-              {/* ABA 2: Textos e IA */}
               {activeTab === 'textos' && (
                 <div className="space-y-4 md:space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
                   
-                  {/* Ponto de Encontro */}
                   <div className={`p-4 rounded-xl border transition-colors ${aiSuccessMeeting ? 'bg-green-50 border-green-200' : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-100'}`}>
                     <div className="flex flex-col md:flex-row md:items-center justify-between mb-3 gap-2">
                       <label className="text-sm font-bold text-gray-800">📍 Pontos de Encontro</label>
@@ -482,7 +488,6 @@ export default function AdminPage() {
                     {aiSuccessMeeting && <p className="text-xs text-green-600 mt-2 font-medium">✅ Formatado perfeitamente!</p>}
                   </div>
 
-                  {/* Descrição */}
                   <div className={`p-4 rounded-xl border transition-colors ${aiSuccessDesc ? 'bg-green-50 border-green-200' : 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-100'}`}>
                     <div className="flex flex-col md:flex-row md:items-center justify-between mb-3 gap-2">
                       <label className="text-sm font-bold text-gray-800">📝 Roteiro e Descrição</label>
@@ -522,28 +527,33 @@ export default function AdminPage() {
                 </div>
               )}
 
-              {/* ABA 3: Mídias */}
               {activeTab === 'midias' && (
                 <div className="space-y-4 md:space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
                   
-                  {editingAgenda && (
-                    <div className="bg-gray-100 p-3 rounded-xl text-sm text-gray-600 mb-2">
-                      <strong>Aviso:</strong> Se você não enviar novos arquivos, as imagens e vídeos atuais serão mantidos.
-                    </div>
-                  )}
-
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Upload do Flyer/Capa */}
-                    <div className="border-2 border-dashed border-[#F17B37] bg-[#F17B37]/5 rounded-xl p-6 text-center hover:bg-[#F17B37]/10 transition relative group">
-                      <FileUp className="mx-auto h-8 w-8 text-[#F17B37] mb-3 group-hover:scale-110 transition" />
-                      <p className="text-base text-gray-800 font-bold">{editingAgenda ? 'Substituir Flyer Principal' : 'Flyer/Capa (Para WhatsApp)'}</p>
-                      <p className="text-sm font-bold text-[#F17B37] mt-2 bg-white inline-block px-4 py-1 rounded-full shadow-sm">
-                        {selectedFlyer && selectedFlyer.length > 0 ? `Flyer selecionado` : 'Toque para Selecionar'}
-                      </p>
-                      <input type="file" accept="image/*" {...register("flyer")} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                    <div className="border-2 border-dashed border-[#F17B37] bg-[#F17B37]/5 rounded-xl p-6 text-center hover:bg-[#F17B37]/10 transition relative group flex flex-col items-center">
+                      
+                      {generatedFlyerUrl ? (
+                        <div className="absolute inset-0 w-full h-full p-2">
+                          <img src={generatedFlyerUrl} alt="Flyer Gerado" className="w-full h-full object-contain rounded-lg shadow-md border border-[#F17B37]/30" />
+                          <div className="absolute top-4 right-4 bg-black/60 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur">
+                            ✨ Gerado por IA
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <FileUp className="mx-auto h-8 w-8 text-[#F17B37] mb-3 group-hover:scale-110 transition" />
+                          <p className="text-base text-gray-800 font-bold">{editingAgenda ? 'Substituir Flyer Principal' : 'Flyer/Capa (Para WhatsApp)'}</p>
+                          <p className="text-sm font-bold text-[#F17B37] mt-2 bg-white inline-block px-4 py-1 rounded-full shadow-sm">
+                            {selectedFlyer && selectedFlyer.length > 0 ? `Flyer selecionado` : 'Toque para Selecionar'}
+                          </p>
+                        </>
+                      )}
+                      
+                      {/* Upload manual sobrepõe a imagem gerada se for clicado */}
+                      <input type="file" accept="image/*" {...register("flyer")} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" title="Trocar imagem" />
                     </div>
 
-                    {/* Upload Fotos */}
                     <div className="border-2 border-dashed border-orange-200 bg-orange-50/50 rounded-xl p-6 text-center hover:bg-orange-50 transition relative group">
                       <ImageIcon className="mx-auto h-8 w-8 text-orange-400 mb-3 group-hover:scale-110 transition" />
                       <p className="text-base text-gray-700 font-bold">{editingAgenda ? 'Substituir Carrossel de Fotos' : 'Fotos do Local'}</p>
@@ -553,7 +563,6 @@ export default function AdminPage() {
                       <input type="file" multiple accept="image/*" {...register("images")} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                     </div>
 
-                    {/* Upload Vídeo */}
                     <div className="md:col-span-2 border-2 border-dashed border-blue-200 bg-blue-50/50 rounded-xl p-6 text-center hover:bg-blue-50 transition relative group">
                       <Video className="mx-auto h-8 w-8 text-blue-400 mb-3 group-hover:scale-110 transition" />
                       <p className="text-base text-gray-700 font-bold">Upload de Vídeo Promocional</p>
@@ -566,9 +575,9 @@ export default function AdminPage() {
                 </div>
               )}
 
-              {/* Mobile Sticky Bar: Botão Salvar Fixo */}
-              <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-md border-t border-gray-200 md:relative md:bg-transparent md:border-0 md:p-0 md:mt-8 z-50 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] md:shadow-none">
-                <div className="flex gap-3 max-w-6xl mx-auto">
+              <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-md border-t border-gray-200 md:relative md:bg-transparent md:border-0 md:p-0 md:mt-8 z-30 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] md:shadow-none flex items-center gap-3">
+                
+                <div className="flex gap-3 max-w-6xl mx-auto w-full">
                   <button 
                     type="submit" 
                     form="admin-form"
@@ -593,12 +602,12 @@ export default function AdminPage() {
                     </button>
                   )}
                 </div>
+
               </div>
 
             </form>
           </div>
 
-          {/* Painel Lateral */}
           <div className="space-y-6">
             
             <div className="bg-gradient-to-br from-[#1D2A3A] to-gray-900 rounded-2xl p-6 text-white shadow-xl border border-gray-800 relative overflow-hidden group">
@@ -675,6 +684,82 @@ export default function AdminPage() {
 
         </div>
       </div>
+
+      {/* BOTÃO FLUTUANTE DO ASSISTENTE IA */}
+      <button
+        onClick={() => setIsAssistantOpen(true)}
+        className="fixed bottom-[90px] md:bottom-8 right-4 md:right-8 bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 rounded-full shadow-[0_0_20px_rgba(124,58,237,0.4)] hover:scale-110 transition-transform z-40 animate-bounce"
+        title="Assistente IA (Gerar Tudo)"
+      >
+        <Bot className="h-7 w-7" />
+      </button>
+
+      {/* MODAL DO ASSISTENTE IA */}
+      {isAssistantOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-300">
+            
+            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-white flex justify-between items-center">
+              <div>
+                <h3 className="font-bold text-xl flex items-center gap-2"><Bot className="h-6 w-6" /> Assistente IA</h3>
+                <p className="text-purple-100 text-sm mt-1">Dite a trilha completa e o flyer</p>
+              </div>
+              <button onClick={() => { setIsAssistantOpen(false); stopRecording(); }} className="bg-white/10 hover:bg-white/20 p-2 rounded-full transition">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-8 flex flex-col items-center text-center space-y-6 bg-gray-50">
+              
+              {isAssistantProcessing ? (
+                <div className="py-8 flex flex-col items-center gap-4">
+                  <div className="relative w-20 h-20">
+                    <div className="absolute inset-0 bg-purple-500 rounded-full animate-ping opacity-20"></div>
+                    <div className="relative bg-white rounded-full p-4 shadow-lg flex items-center justify-center h-full w-full">
+                      <Loader2 className="h-8 w-8 text-purple-600 animate-spin" />
+                    </div>
+                  </div>
+                  <h4 className="font-bold text-gray-800 text-lg">Criando sua Trilha Mágica...</h4>
+                  <p className="text-sm text-gray-500 max-w-xs">
+                    Lendo o roteiro, identificando o local e desenhando o seu flyer. Isso pode levar até 20 segundos!
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 w-full text-left text-sm text-gray-600 italic h-24 overflow-y-auto custom-scrollbar">
+                    {assistantTranscript ? `"${assistantTranscript}"` : "Exemplo: 'Cria uma trilha pra Serra do Cipó dia 20 de maio, custa R$ 150. O embarque é às 5 da manhã no Terminal. Gera um flyer com cachoeira...'"}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (recordingType === 'assistant') {
+                        stopRecording();
+                        if (assistantTranscript.length > 5) processAssistantVoice(assistantTranscript);
+                      } else {
+                        startRecording('assistant');
+                      }
+                    }}
+                    className={`w-24 h-24 rounded-full flex items-center justify-center shadow-lg transition-all ${
+                      recordingType === 'assistant' 
+                        ? 'bg-red-500 text-white animate-pulse ring-8 ring-red-500/20' 
+                        : 'bg-white border-4 border-purple-100 text-purple-600 hover:bg-purple-50 hover:border-purple-200'
+                    }`}
+                  >
+                    {recordingType === 'assistant' ? <Square className="h-8 w-8 fill-white" /> : <Mic className="h-10 w-10" />}
+                  </button>
+
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                    {recordingType === 'assistant' ? `Gravando... ${formatRecordingTime(recordingTime)}` : 'Toque para Falar'}
+                  </p>
+                </>
+              )}
+
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

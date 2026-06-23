@@ -683,10 +683,10 @@ export default function AdminPage() {
       {/* BOTÃO FLUTUANTE DO ASSISTENTE IA */}
       <button
         onClick={() => setIsAssistantOpen(true)}
-        className="fixed bottom-[90px] md:bottom-8 right-4 md:right-8 bg-gradient-to-r from-gray-900 to-black text-white p-3 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.4)] hover:scale-110 transition-transform z-40 animate-bounce border-2 border-orange-500"
+        className="fixed bottom-[90px] md:bottom-8 right-4 md:right-8 bg-transparent text-white rounded-full shadow-[0_0_20px_rgba(0,0,0,0.4)] hover:scale-110 transition-transform z-40 animate-bounce border-2 border-[#F17B37] overflow-hidden"
         title="Assistente IA (Chat Mágico)"
       >
-        <img src="/logo.png" alt="Logo Mais Trilha" className="h-10 w-10 object-contain drop-shadow-md" />
+        <img src="/logo.png" alt="Logo Mais Trilha" className="h-16 w-16 object-cover scale-110" />
       </button>
 
       {/* MODAL DO ASSISTENTE IA (CHAT HÍBRIDO) */}
@@ -694,9 +694,11 @@ export default function AdminPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-300 flex flex-col h-[85vh] max-h-[800px]">
             
-            <div className="bg-gradient-to-r from-gray-900 to-black border-b-2 border-orange-500 p-4 text-white flex justify-between items-center shrink-0">
+            <div className="bg-gradient-to-r from-gray-900 to-black border-b-2 border-[#F17B37] p-4 text-white flex justify-between items-center shrink-0">
               <div className="flex items-center gap-3">
-                <div className="bg-white/10 p-1.5 rounded-full"><img src="/logo.png" alt="Logo" className="h-7 w-7 object-contain" /></div>
+                <div className="rounded-full overflow-hidden border border-white/20 shadow-sm w-10 h-10 flex shrink-0">
+                  <img src="/logo.png" alt="Logo" className="w-full h-full object-cover scale-110" />
+                </div>
                 <div>
                   <h3 className="font-bold text-lg leading-tight">Assistente IA</h3>
                   <p className="text-purple-100 text-xs mt-0.5">Converse ou mande cadastrar trilhas</p>

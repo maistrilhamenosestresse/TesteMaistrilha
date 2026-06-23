@@ -649,19 +649,16 @@ export default function AdminPage() {
                   agendas.map((agenda) => (
                     <div key={agenda.id} className={`flex items-center justify-between p-3.5 bg-gray-50 border rounded-xl hover:border-gray-300 transition-all ${editingAgenda?.id === agenda.id ? 'border-[#F17B37] bg-[#F17B37]/5 shadow-sm' : 'border-gray-100 hover:shadow-md'}`}>
                       <div className="truncate pr-3">
-                        <p className="text-sm font-bold text-gray-800 truncate mb-1">{agenda.title}</p>
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-sm font-bold text-gray-800 truncate">{agenda.title}</p>
+                          <span className="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 border border-blue-200 shrink-0 shadow-sm" title="Pessoas que entraram nesta trilha">
+                            <Eye className="h-3 w-3" /> {agenda.views || 0}
+                          </span>
+                        </div>
                         <div className="flex items-center gap-2 text-xs text-gray-500 font-medium">
                           <span className="flex items-center gap-1"><Calendar className="h-3 w-3 text-gray-400" /> {formatDateDisplay(agenda.date)}</span>
                           <span>•</span>
                           <span className="flex items-center gap-1 text-green-600"><DollarSign className="h-3 w-3" /> {agenda.price}</span>
-                          {agenda.views !== undefined && (
-                            <>
-                              <span>•</span>
-                              <span className="flex items-center gap-1 text-blue-500" title="Cliques/Visualizações">
-                                <Eye className="h-3 w-3" /> {agenda.views}
-                              </span>
-                            </>
-                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">

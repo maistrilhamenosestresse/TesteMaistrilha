@@ -26,6 +26,7 @@ export default function AdminPage() {
   const { register, handleSubmit, reset, watch, setValue, getValues } = useForm<AgendaForm>();
   const [isLoading, setIsLoading] = useState(false);
   const [agendas, setAgendas] = useState<any[]>([]);
+  const [globalViews, setGlobalViews] = useState<number>(0);
   const [isFetching, setIsFetching] = useState(true);
   const [editingAgenda, setEditingAgenda] = useState<any>(null);
   
@@ -59,6 +60,10 @@ export default function AdminPage() {
       const { data, error } = await supabase.from('agendas').select('*').order('date', { ascending: true });
       if (error) throw error;
       setAgendas(data || []);
+      
+      const { data: statsData } = await supabase.from('global_stats').select('total_views').eq('id', 1).single();
+      if (statsData) setGlobalViews(statsData.total_views || 0);
+      
     } catch (error) {
       console.error("Erro ao buscar agendas:", error);
     } finally {
@@ -629,9 +634,17 @@ export default function AdminPage() {
             </div>
 
             <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100 flex-1 h-[400px] md:h-auto overflow-hidden flex flex-col">
-              <h3 className="font-bold text-gray-800 mb-4 flex items-center justify-between">
-                Trilhas Ativas
-                <span className="bg-[#F17B37]/10 text-[#F17B37] text-xs py-1 px-3 rounded-full font-bold">{agendas.length}</span>
+              <h3 className="font-bold text-gray-800 mb-4 flex flex-col md:flex-row md:items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  Trilhas Ativas
+                  <span className="bg-[#F17B37]/10 text-[#F17B37] text-xs py-1 px-3 rounded-full font-bold">{agendas.length}</span>
+                </div>
+                {globalViews > 0 && (
+                  <div className="flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1.5 rounded-xl border border-green-200 shadow-sm">
+                    <Eye className="h-4 w-4" />
+                    <span className="text-xs font-extrabold uppercase tracking-wide">Total de Acessos: {globalViews}</span>
+                  </div>
+                )}
               </h3>
               
               <div className="space-y-3 flex-1 overflow-y-auto pr-2 pb-10 custom-scrollbar">

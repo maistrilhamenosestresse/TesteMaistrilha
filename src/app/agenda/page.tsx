@@ -14,6 +14,23 @@ export default function AgendaList() {
     async function fetchAgendas() {
       const today = new Date().toISOString().split('T')[0];
 
+      // Busca e Atualiza Contador Global de Acessos
+      try {
+        if (typeof window !== 'undefined') {
+          const hasViewedGlobal = localStorage.getItem('viewed_global');
+          if (!hasViewedGlobal) {
+            // Busca o total atual
+            const { data: stats } = await supabase.from('global_stats').select('total_views').eq('id', 1).single();
+            if (stats) {
+              await supabase.from('global_stats').update({ total_views: (stats.total_views || 0) + 1 }).eq('id', 1);
+              localStorage.setItem('viewed_global', 'true');
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Erro ao registrar acesso global", e);
+      }
+
       const { data, error } = await supabase
         .from('agendas')
         .select('*')

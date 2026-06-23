@@ -26,12 +26,21 @@ export default function AgendaDetailsPage() {
       if (!error && data) {
         setAgenda(data);
         
-        // Incrementa visualização apenas uma vez por carregamento de página
+        // Incrementa visualização apenas uma vez por carregamento de página e por dispositivo
         try {
-          await supabase
-            .from('agendas')
-            .update({ views: (data.views || 0) + 1 })
-            .eq('id', data.id);
+          if (typeof window !== 'undefined') {
+            const viewedKey = `viewed_agenda_${data.id}`;
+            const hasViewed = localStorage.getItem(viewedKey);
+            
+            if (!hasViewed) {
+              await supabase
+                .from('agendas')
+                .update({ views: (data.views || 0) + 1 })
+                .eq('id', data.id);
+                
+              localStorage.setItem(viewedKey, 'true');
+            }
+          }
         } catch (e) {
           console.error("Erro ao computar visualização", e);
         }

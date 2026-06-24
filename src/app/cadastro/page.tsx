@@ -14,6 +14,8 @@ export default function CadastroPage() {
   
   const sigCanvas = useRef<SignatureCanvas>(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
+  const [signatureData, setSignatureData] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     full_name: "",
@@ -119,9 +121,8 @@ export default function CadastroPage() {
       }
 
       // 1.5 Upload Signature
-      if (sigCanvas.current && !sigCanvas.current.isEmpty()) {
-        const dataUrl = sigCanvas.current.getTrimmedCanvas().toDataURL("image/png");
-        const res = await fetch(dataUrl);
+      if (signatureData) {
+        const res = await fetch(signatureData);
         const blob = await res.blob();
         
         const signatureName = `signature_${Math.random().toString(36).substring(2)}_${Date.now()}.png`;
@@ -549,29 +550,34 @@ export default function CadastroPage() {
                 </div>
 
                 <div className="mt-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="block text-sm font-bold text-gray-300">Assinatura igual o documento</label>
+                  <label className="block text-sm font-bold text-gray-300 mb-2">Assinatura igual o documento</label>
+                  {!signatureData ? (
                     <button 
                       type="button" 
-                      onClick={() => sigCanvas.current?.clear()}
-                      className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1"
+                      onClick={() => setIsSignatureModalOpen(true)}
+                      className="w-full bg-white/10 text-[#F17B37] border-2 border-dashed border-[#F17B37]/50 p-6 rounded-2xl font-bold flex flex-col items-center justify-center gap-2 hover:bg-[#F17B37]/10 transition"
                     >
-                      <Eraser className="w-3 h-3" /> Limpar
+                      <PenTool className="w-6 h-6" /> 
+                      <span>Clique aqui para assinar</span>
+                      <span className="text-xs text-gray-400 font-normal">Abre a tela de assinatura</span>
                     </button>
-                  </div>
-                  <div className="bg-white rounded-2xl overflow-hidden border-2 border-gray-300 touch-none">
-                    <SignatureCanvas 
-                      ref={sigCanvas}
-                      canvasProps={{
-                        className: 'w-full h-40 cursor-crosshair'
-                      }}
-                      backgroundColor="white"
-                      penColor="black"
-                    />
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2 flex items-center justify-center gap-1">
-                    <PenTool className="w-3 h-3" /> Assine com o dedo na tela
-                  </p>
+                  ) : (
+                    <div className="bg-white/10 border border-green-500/50 p-4 rounded-2xl text-center">
+                      <div className="flex justify-center mb-2 bg-white rounded-xl p-2 w-full max-w-[200px] mx-auto">
+                        <img src={signatureData} alt="Sua Assinatura" className="h-16 object-contain" />
+                      </div>
+                      <p className="text-green-400 font-bold flex items-center justify-center gap-1 mb-2">
+                        <CheckCircle2 className="w-4 h-4" /> Assinatura Registrada
+                      </p>
+                      <button 
+                        type="button" 
+                        onClick={() => setIsSignatureModalOpen(true)}
+                        className="text-xs text-gray-400 hover:text-white transition underline"
+                      >
+                        Refazer assinatura
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex gap-3 mt-8">
@@ -580,7 +586,7 @@ export default function CadastroPage() {
                   </button>
                   <button 
                     type="submit" 
-                    disabled={isLoading || !acceptedTerms}
+                    disabled={isLoading || !acceptedTerms || !signatureData}
                     className="flex-1 bg-gradient-to-r from-[#F17B37] to-[#f9a03f] text-white p-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:scale-[1.02] shadow-lg shadow-[#F17B37]/20 transition disabled:opacity-50 disabled:scale-100"
                   >
                     {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <><CheckCircle2 className="h-5 w-5" /> Finalizar Cadastro</>}
@@ -592,6 +598,69 @@ export default function CadastroPage() {
 
         </form>
       </div>
+
+      {/* MODAL DE ASSINATURA FULL SCREEN */}
+      <AnimatePresence>
+        {isSignatureModalOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed inset-0 bg-[#0F1722] z-50 flex flex-col"
+          >
+            <div className="p-4 bg-[#1a2332] flex justify-between items-center border-b border-white/10">
+              <div>
+                <h3 className="text-white font-bold text-lg">Sua Assinatura</h3>
+                <p className="text-xs text-gray-400">Assine com o dedo na área em branco</p>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setIsSignatureModalOpen(false)}
+                className="text-gray-400 hover:text-white p-2 font-bold"
+              >
+                Cancelar
+              </button>
+            </div>
+            
+            <div className="flex-1 bg-white relative touch-none">
+              <SignatureCanvas 
+                ref={sigCanvas}
+                canvasProps={{
+                  className: 'w-full h-full cursor-crosshair'
+                }}
+                backgroundColor="white"
+                penColor="black"
+              />
+              <div className="absolute top-4 right-4 flex gap-2">
+                <button 
+                  type="button" 
+                  onClick={() => sigCanvas.current?.clear()}
+                  className="bg-red-100 text-red-600 px-3 py-1.5 rounded-full text-xs font-bold shadow-md flex items-center gap-1 hover:bg-red-200 transition"
+                >
+                  <Eraser className="w-3 h-3" /> Limpar
+                </button>
+              </div>
+            </div>
+
+            <div className="p-4 bg-[#1a2332] border-t border-white/10">
+              <button 
+                type="button" 
+                onClick={() => {
+                  if (sigCanvas.current && !sigCanvas.current.isEmpty()) {
+                    setSignatureData(sigCanvas.current.getTrimmedCanvas().toDataURL("image/png"));
+                    setIsSignatureModalOpen(false);
+                  } else {
+                    alert("Por favor, faça a sua assinatura na área em branco antes de confirmar.");
+                  }
+                }}
+                className="w-full bg-[#F17B37] text-white py-4 rounded-2xl font-bold text-lg shadow-lg hover:scale-[1.02] transition"
+              >
+                Confirmar Assinatura
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

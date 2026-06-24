@@ -173,6 +173,17 @@ export default function CadastroPage() {
         })
       }).catch(err => console.error("Erro ignorado de email", err));
 
+      // 4. Disparo automático do WhatsApp
+      await fetch('/api/whatsapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'individual',
+          phone: savedClient.phone,
+          message: `Olá *${savedClient.full_name.split(' ')[0]}*! Recebemos seu cadastro e Termo de Responsabilidade com sucesso.\n\nBem-vindo(a) à aventura com a *Mais Trilha e Menos Estresse*! 🏕️🥾\n\nEm breve enviaremos as orientações e horários no grupo oficial. Salve nosso contato!`
+        })
+      }).catch(err => console.error("Erro ignorado do WhatsApp API", err));
+
       setIsSuccess(true);
       
     } catch (error: any) {

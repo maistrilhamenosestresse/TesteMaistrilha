@@ -55,6 +55,25 @@ export default function CadastroPage() {
     return v;
   };
 
+  const formatRG = (v: string) => {
+    v = v.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+    let letters = v.replace(/[^A-Z]/g, "").substring(0, 2);
+    let numbers = v.replace(/[^0-9]/g, "").substring(0, 9);
+    
+    if (numbers.length > 0) {
+      if (numbers.length > 5) {
+        numbers = numbers.replace(/^(\d{2})(\d{3})(\d{1,4})/, "$1.$2.$3");
+      } else if (numbers.length > 2) {
+        numbers = numbers.replace(/^(\d{2})(\d{1,3})/, "$1.$2");
+      }
+    }
+
+    if (letters.length === 2) {
+      return numbers.length > 0 ? `${letters}-${numbers}` : letters;
+    }
+    return letters + numbers;
+  };
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -282,7 +301,7 @@ export default function CadastroPage() {
                     type="text" 
                     required
                     value={formData.rg}
-                    onChange={e => setFormData({...formData, rg: e.target.value})}
+                    onChange={e => setFormData({...formData, rg: formatRG(e.target.value)})}
                     className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-[#F17B37] outline-none transition-all placeholder-gray-600" 
                     placeholder="MG-00.000.000"
                   />

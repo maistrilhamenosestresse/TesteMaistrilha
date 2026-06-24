@@ -30,6 +30,41 @@ export default function AdminPage() {
   const [clients, setClients] = useState<any[]>([]);
   const [isFetching, setIsFetching] = useState(true);
   const [editingAgenda, setEditingAgenda] = useState<any>(null);
+  const [editingClient, setEditingClient] = useState<any>(null);
+
+  const handleDeleteClient = async (id: string) => {
+    if (!window.confirm("Tem certeza que deseja excluir permanentemente este cliente do sistema?")) return;
+    try {
+      const { error } = await supabase.from('clients').delete().eq('id', id);
+      if (error) throw error;
+      setClients(clients.filter(c => c.id !== id));
+      alert("Cliente excluído com sucesso.");
+    } catch (err: any) {
+      alert("Erro ao excluir cliente: " + err.message);
+    }
+  };
+
+  const handleSaveEditedClient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const { error } = await supabase.from('clients')
+        .update({
+          full_name: editingClient.full_name,
+          cpf: editingClient.cpf,
+          rg: editingClient.rg,
+          phone: editingClient.phone,
+          health_notes: editingClient.health_notes
+        })
+        .eq('id', editingClient.id);
+      
+      if (error) throw error;
+      setClients(clients.map(c => c.id === editingClient.id ? editingClient : c));
+      setEditingClient(null);
+      alert("Cliente atualizado com sucesso!");
+    } catch (err: any) {
+      alert("Erro ao editar cliente: " + err.message);
+    }
+  };
   
   const [mainTab, setMainTab] = useState<'trilhas' | 'clientes'>('trilhas');
   const [activeTab, setActiveTab] = useState<'geral' | 'textos' | 'midias'>('geral');
@@ -749,12 +784,13 @@ export default function AdminPage() {
                     <th className="p-4 font-bold border-b print:border-black">Contato</th>
                     <th className="p-4 font-bold border-b print:border-black">Emergência</th>
                     <th className="p-4 font-bold border-b print:border-black w-1/4">Saúde / Observações</th>
+                    <th className="p-4 font-bold border-b print:hidden text-center">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 print:divide-black">
                   {clients.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="p-8 text-center text-gray-400">
+                      <td colSpan={6} className="p-8 text-center text-gray-400">
                         Nenhum cliente cadastrado ainda. Compartilhe o link <strong className="text-[#F17B37]">maistrilha.vercel.app/cadastro</strong>
                       </td>
                     </tr>
@@ -789,6 +825,24 @@ export default function AdminPage() {
                           <span className={`block whitespace-pre-wrap text-xs font-bold px-2.5 py-1.5 rounded-md ${client.health_notes && client.health_notes.toLowerCase() !== 'nenhuma' && client.health_notes.toLowerCase() !== 'não tem' ? 'bg-red-50 text-red-700 border border-red-200 print:border-red-700 print:bg-transparent' : 'bg-gray-50 text-gray-600 print:bg-transparent'}`}>
                             {client.health_notes || "Nenhuma observação"}
                           </span>
+                        </td>
+                        <td className="p-4 print:hidden">
+                          <div className="flex items-center justify-center gap-2">
+                            <button 
+                              onClick={() => setEditingClient(client)}
+                              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="Editar Cliente"
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteClient(client.id)}
+                              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Excluir Cliente"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -924,6 +978,89 @@ export default function AdminPage() {
             </div>
 
           </div>
+        </div>
+      )}
+
+      {/* MODAL DE EDIÇÃO DE CLIENTE */}
+      {editingClient && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+          <form onSubmit={handleSaveEditedClient} className="bg-white rounded-2xl w-full max-w-lg p-6 shadow-2xl relative animate-in zoom-in-95 duration-300">
+            <button 
+              type="button"
+              onClick={() => setEditingClient(null)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-full p-2 transition"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+              <Edit2 className="h-5 w-5 text-blue-500" /> Editar Cliente
+            </h2>
+            
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Nome Completo</label>
+                <input 
+                  type="text" required
+                  value={editingClient.full_name}
+                  onChange={e => setEditingClient({...editingClient, full_name: e.target.value})}
+                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" 
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">CPF</label>
+                  <input 
+                    type="text" required
+                    value={editingClient.cpf}
+                    onChange={e => setEditingClient({...editingClient, cpf: e.target.value})}
+                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">RG</label>
+                  <input 
+                    type="text" required
+                    value={editingClient.rg}
+                    onChange={e => setEditingClient({...editingClient, rg: e.target.value})}
+                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" 
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Telefone</label>
+                <input 
+                  type="text" required
+                  value={editingClient.phone}
+                  onChange={e => setEditingClient({...editingClient, phone: e.target.value})}
+                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Saúde / Observações</label>
+                <textarea 
+                  value={editingClient.health_notes}
+                  onChange={e => setEditingClient({...editingClient, health_notes: e.target.value})}
+                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none h-32 resize-none" 
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <button 
+                type="button" 
+                onClick={() => setEditingClient(null)}
+                className="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition"
+              >
+                Cancelar
+              </button>
+              <button 
+                type="submit" 
+                className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition flex items-center justify-center gap-2"
+              >
+                <CheckCircle2 className="h-5 w-5" /> Salvar Edição
+              </button>
+            </div>
+          </form>
         </div>
       )}
 

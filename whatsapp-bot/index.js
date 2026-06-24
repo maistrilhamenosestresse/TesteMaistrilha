@@ -1,4 +1,4 @@
-const { Client, LocalAuth } = require('whatsapp-web.js');
+const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
@@ -106,7 +106,13 @@ async function pollSupabaseQueue() {
 
             const targetId = numberDetails._serialized;
             
-            await client.sendMessage(targetId, task.message);
+            if (task.media_url) {
+                const media = await MessageMedia.fromUrl(task.media_url);
+                await client.sendMessage(targetId, media, { caption: task.message });
+            } else {
+                await client.sendMessage(targetId, task.message);
+            }
+            
             console.log(`[Queue] Mensagem enviada com sucesso para ${targetId}`);
             
             // Marca como enviada
@@ -154,8 +160,8 @@ app.post('/api/trigger-queue', authMiddleware, async (req, res) => {
 app.post('/api/send/individual', authMiddleware, async (req, res) => {
     if (!isClientReady) return res.status(503).json({ error: 'WhatsApp não está conectado.' });
     
-    const { phone, message } = req.body;
-    if (!phone || !message) return res.status(400).json({ error: 'Faltam os campos phone e message.' });
+    const { phone, message, media_url } = req.body;
+    if (!phone || (!message && !media_url)) return res.status(400).json({ error: 'Faltam os campos phone, message ou media_url.' });
 
     const cleanPhone = formatNumber(phone);
     
@@ -168,7 +174,14 @@ app.post('/api/send/individual', authMiddleware, async (req, res) => {
             }
             
             const targetId = numberDetails._serialized;
-            await client.sendMessage(targetId, message);
+            
+            if (media_url) {
+                const media = await MessageMedia.fromUrl(media_url);
+                await client.sendMessage(targetId, media, { caption: message || '' });
+            } else {
+                await client.sendMessage(targetId, message);
+            }
+
             return res.json({ success: true, formattedPhone: targetId });
             
         } catch (error) {
@@ -182,6 +195,42 @@ app.post('/api/send/individual', authMiddleware, async (req, res) => {
     }
 });
 
+// Entrar em um Grupo via Link de Convite
+app.post('/api/group/join', authMiddleware, async (req, res) => {
+    if (!isClientReady) return res.status(503).json({ error: 'WhatsApp não está conectado.' });
+    
+    const { inviteCode } = req.body;
+    if (!inviteCode) return res.status(400).json({ error: 'Falta o inviteCode.' });
+
+    try {
+        // Limpa o link para pegar só o código hash
+        const inviteId = inviteCode.replace('https://chat.whatsapp.com/', '').split('?')[0];
+        const groupId = await client.acceptInvite(inviteId);
+        res.json({ success: true, groupId });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Enviar Mensagem para Grupo Imediato
+app.post('/api/group/send', authMiddleware, async (req, res) => {
+    if (!isClientReady) return res.status(503).json({ error: 'WhatsApp não está conectado.' });
+    
+    const { groupId, message, media_url } = req.body;
+    if (!groupId || (!message && !media_url)) return res.status(400).json({ error: 'Faltam os campos.' });
+
+    try {
+        if (media_url) {
+            const media = await MessageMedia.fromUrl(media_url);
+            await client.sendMessage(groupId, media, { caption: message || '' });
+        } else {
+            await client.sendMessage(groupId, message);
+        }
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 // ---------------------------------------------------------
 // INICIALIZAÇÃO DO SERVIDOR E DO WHATSAPP

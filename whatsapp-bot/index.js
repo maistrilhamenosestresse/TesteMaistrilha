@@ -95,32 +95,32 @@ async function smartGetNumberId(phoneStr) {
 
     console.log(`[SmartSearch] Buscando formato original: ${clean}...`);
     try {
-        // Timeout muito rápido: 4 segundos. Se o número for válido, retorna em milissegundos.
-        // Se for inválido, a biblioteca trava. Nós usamos esse travamento a nosso favor!
-        const res = await sendWithTimeout(client.getNumberId(clean), 4000);
+        const res = await sendWithTimeout(client.getNumberId(clean), 3000);
         if (res) return res;
     } catch (e) {
-        console.log(`[SmartSearch] Travou ou falhou. O número não é ${clean}.`);
+        console.log(`[SmartSearch] Travou ou falhou na busca original.`);
     }
 
-    // Plano B: Se era com 9, tenta sem o 9. Se era sem 9, tenta com 9.
     if (clean.length === 13 && clean.startsWith('55')) {
         const cleanSem9 = clean.substring(0, 4) + clean.substring(5);
         console.log(`[SmartSearch] Tentando formato alternativo (Sem o 9): ${cleanSem9}...`);
         try {
-            const resSem9 = await sendWithTimeout(client.getNumberId(cleanSem9), 4000);
+            const resSem9 = await sendWithTimeout(client.getNumberId(cleanSem9), 3000);
             if (resSem9) return resSem9;
         } catch (e) { }
     } else if (clean.length === 12 && clean.startsWith('55')) {
         const cleanCom9 = clean.substring(0, 4) + '9' + clean.substring(4);
         console.log(`[SmartSearch] Tentando formato alternativo (Com o 9): ${cleanCom9}...`);
         try {
-            const resCom9 = await sendWithTimeout(client.getNumberId(cleanCom9), 4000);
+            const resCom9 = await sendWithTimeout(client.getNumberId(cleanCom9), 3000);
             if (resCom9) return resCom9;
         } catch (e) { }
     }
 
-    throw new Error("O WhatsApp não reconheceu o número nem com o 9 nem sem o 9.");
+    // Se o WhatsApp se recusar a resolver (ex: Contas Business ou instabilidade), 
+    // NÃO gera erro. Retorna o número cru para forçarmos o envio cego!
+    console.log(`[SmartSearch] Falhou ao resolver. Retornando formato cru para envio cego.`);
+    return { _serialized: clean + '@c.us' };
 }
 
 async function safeSendMessage(phoneStr, message, mediaUrl = null) {
@@ -137,13 +137,39 @@ async function safeSendMessage(phoneStr, message, mediaUrl = null) {
         const numberDetails = await smartGetNumberId(phoneStr);
         const targetId = numberDetails._serialized;
         
-        console.log(`[Send] Sucesso na busca! ID oficial: ${targetId}. Disparando mensagem...`);
+        console.log(`[Send] Disparando mensagem para: ${targetId}...`);
         
-        if (media) await sendWithTimeout(client.sendMessage(targetId, media, { caption: message || '' }), 25000);
-        else await sendWithTimeout(client.sendMessage(targetId, message || ''), 25000);
+        // Timeout de 15 segundos para o envio real
+        if (media) await sendWithTimeout(client.sendMessage(targetId, media, { caption: message || '' }), 15000);
+        else await sendWithTimeout(client.sendMessage(targetId, message || ''), 15000);
         
         return targetId;
     } catch (e) {
+        console.log(`[Send] Falha no primeiro envio: ${e.message}. Tentando fallback cego...`);
+        
+        // Se targetId extraído deu falha, vamos tentar calcular a inversão do 9
+        let cleanStr = String(phoneStr).replace(/\D/g, '');
+        if (cleanStr.length === 10 || cleanStr.length === 11) cleanStr = '55' + cleanStr;
+        
+        let fallbackClean = null;
+        if (cleanStr.length === 13 && cleanStr.startsWith('55')) {
+            fallbackClean = cleanStr.substring(0, 4) + cleanStr.substring(5);
+        } else if (cleanStr.length === 12 && cleanStr.startsWith('55')) {
+            fallbackClean = cleanStr.substring(0, 4) + '9' + cleanStr.substring(4);
+        }
+
+        if (fallbackClean) {
+            const fallbackId = fallbackClean + '@c.us';
+            console.log(`[Send] Disparo cego de emergência para: ${fallbackId}...`);
+            try {
+                if (media) await sendWithTimeout(client.sendMessage(fallbackId, media, { caption: message || '' }), 15000);
+                else await sendWithTimeout(client.sendMessage(fallbackId, message || ''), 15000);
+                return fallbackId;
+            } catch (err2) {
+                throw new Error("O WhatsApp bloqueou o envio definitivo (com e sem o 9). O número pode ser inválido ou Business bloqueado.");
+            }
+        }
+
         throw new Error(e.message);
     }
 }

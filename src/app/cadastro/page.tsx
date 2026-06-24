@@ -489,7 +489,6 @@ export default function CadastroPage() {
                 <div className="bg-white/5 border border-white/10 p-4 rounded-2xl max-h-64 overflow-y-auto text-xs text-gray-300 custom-scrollbar space-y-4">
                   <h3 className="font-bold text-white text-sm">Resumo da Cobertura de Seguro:</h3>
                   <ul className="list-disc pl-4 space-y-1">
-                    <li><strong>Valor do Day Use:</strong> R$ 4,00 por pessoa/dia</li>
                     <li><strong>Morte Acidental (MA):</strong> Indenização integral em caso de morte acidental (R$ 30.000,00)</li>
                     <li><strong>Invalidez Permanente (IPA):</strong> Invalidez decorrente de acidente (R$ 30.000,00)</li>
                     <li><strong>DMHO:</strong> Despesas Médico Hospitalares e Odontológicas (R$ 3.000,00)</li>
@@ -543,15 +542,15 @@ export default function CadastroPage() {
                       required
                       checked={acceptedTerms}
                       onChange={(e) => setAcceptedTerms(e.target.checked)}
-                      className="w-5 h-5 accent-[#F17B37]"
+                      className="w-5 h-5 accent-[#F17B37] shrink-0"
                     />
-                    <span className="text-sm font-bold text-gray-300">Li e aceito os termos descritos acima.</span>
+                    <span className="text-sm font-bold text-gray-300">Eu autorizo usar os dados para o seguro, entendo que é pela minha segurança e confirmo que todos os dados que foram preenchidos são verdadeiros.</span>
                   </label>
                 </div>
 
                 <div className="mt-4">
                   <div className="flex justify-between items-center mb-2">
-                    <label className="block text-sm font-bold text-gray-300">Assinatura Digital</label>
+                    <label className="block text-sm font-bold text-gray-300">Assinatura igual o documento</label>
                     <button 
                       type="button" 
                       onClick={() => sigCanvas.current?.clear()}

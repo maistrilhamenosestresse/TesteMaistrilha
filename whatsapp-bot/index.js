@@ -85,15 +85,45 @@ const sendWithTimeout = (promise, ms = 45000) => {
     ]);
 };
 
-async function safeSendMessage(phoneStr, message, mediaUrl = null) {
+async function smartGetNumberId(phoneStr) {
     let clean = String(phoneStr).replace(/\D/g, '');
     
-    // Tesoura do 55: Garante que vamos passar APENAS o número local (DDD + Número)
-    // Isso imita exatamente o comportamento que a usuária testou manualmente e funcionou.
-    if (clean.startsWith('55') && (clean.length === 12 || clean.length === 13)) {
-        clean = clean.substring(2);
+    // Sempre garante o 55 para o getNumberId do whatsapp-web.js
+    if (clean.length === 10 || clean.length === 11) {
+        clean = '55' + clean;
     }
 
+    console.log(`[SmartSearch] Buscando formato original: ${clean}...`);
+    try {
+        // Timeout muito rápido: 4 segundos. Se o número for válido, retorna em milissegundos.
+        // Se for inválido, a biblioteca trava. Nós usamos esse travamento a nosso favor!
+        const res = await sendWithTimeout(client.getNumberId(clean), 4000);
+        if (res) return res;
+    } catch (e) {
+        console.log(`[SmartSearch] Travou ou falhou. O número não é ${clean}.`);
+    }
+
+    // Plano B: Se era com 9, tenta sem o 9. Se era sem 9, tenta com 9.
+    if (clean.length === 13 && clean.startsWith('55')) {
+        const cleanSem9 = clean.substring(0, 4) + clean.substring(5);
+        console.log(`[SmartSearch] Tentando formato alternativo (Sem o 9): ${cleanSem9}...`);
+        try {
+            const resSem9 = await sendWithTimeout(client.getNumberId(cleanSem9), 4000);
+            if (resSem9) return resSem9;
+        } catch (e) { }
+    } else if (clean.length === 12 && clean.startsWith('55')) {
+        const cleanCom9 = clean.substring(0, 4) + '9' + clean.substring(4);
+        console.log(`[SmartSearch] Tentando formato alternativo (Com o 9): ${cleanCom9}...`);
+        try {
+            const resCom9 = await sendWithTimeout(client.getNumberId(cleanCom9), 4000);
+            if (resCom9) return resCom9;
+        } catch (e) { }
+    }
+
+    throw new Error("O WhatsApp não reconheceu o número nem com o 9 nem sem o 9.");
+}
+
+async function safeSendMessage(phoneStr, message, mediaUrl = null) {
     let media = null;
     if (mediaUrl && mediaUrl.startsWith('http')) {
         try {
@@ -104,25 +134,17 @@ async function safeSendMessage(phoneStr, message, mediaUrl = null) {
     }
 
     try {
-        console.log(`[Send] Pedindo ao WhatsApp para resolver o contato local: ${clean}...`);
-        
-        // A nova versão 1.34.7 do motor permite que o getNumberId funcione sem travar!
-        // Ele vai descobrir sozinho se o número precisa do 9 e se é do Brasil, e devolver o ID global (@c.us).
-        const numberDetails = await sendWithTimeout(client.getNumberId(clean), 15000);
-        
-        if (!numberDetails) {
-            throw new Error(`O WhatsApp não encontrou o número ${clean}.`);
-        }
-
+        const numberDetails = await smartGetNumberId(phoneStr);
         const targetId = numberDetails._serialized;
-        console.log(`[Send] WhatsApp encontrou! ID oficial: ${targetId}. Enviando mensagem...`);
+        
+        console.log(`[Send] Sucesso na busca! ID oficial: ${targetId}. Disparando mensagem...`);
         
         if (media) await sendWithTimeout(client.sendMessage(targetId, media, { caption: message || '' }), 25000);
         else await sendWithTimeout(client.sendMessage(targetId, message || ''), 25000);
         
         return targetId;
     } catch (e) {
-        throw new Error(e.message.includes('Timeout') ? 'O WhatsApp travou ao tentar resolver este número.' : e.message);
+        throw new Error(e.message);
     }
 }
 

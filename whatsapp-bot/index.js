@@ -76,9 +76,12 @@ const sendWithTimeout = (promise, ms = 45000) => {
 };
 
 async function safeSendMessage(phoneStr, message, mediaUrl = null) {
-    let targetId = phoneStr + '@c.us';
+    let clean = String(phoneStr).replace(/\D/g, '');
+    if (clean.length === 10 || clean.length === 11) {
+        clean = '55' + clean;
+    }
+
     let media = null;
-    
     if (mediaUrl && mediaUrl.startsWith('http')) {
         try {
             media = await MessageMedia.fromUrl(mediaUrl);
@@ -88,51 +91,25 @@ async function safeSendMessage(phoneStr, message, mediaUrl = null) {
     }
 
     try {
-        console.log(`[Send] Verificando se ${targetId} existe no WhatsApp...`);
-        const isRegistered = await sendWithTimeout(client.isRegisteredUser(targetId), 15000);
+        console.log(`[Send] Puxando ID oficial do WhatsApp para ${clean}...`);
+        // Voltar a usar getNumberId, que além de validar, força o WhatsApp Web a carregar o contato na memória!
+        const numberDetails = await sendWithTimeout(client.getNumberId(clean), 15000);
         
-        if (!isRegistered) {
-            throw new Error('NotRegistered');
+        if (!numberDetails) {
+            throw new Error('O número não possui WhatsApp registrado ou o formato está incorreto.');
         }
 
-        console.log(`[Send] Tentando enviar para ${targetId}...`);
+        const targetId = numberDetails._serialized;
+        console.log(`[Send] ID encontrado (${targetId}). Tentando enviar...`);
+        
         if (media) await sendWithTimeout(client.sendMessage(targetId, media, { caption: message || '' }));
         else await sendWithTimeout(client.sendMessage(targetId, message || ''));
         return targetId;
     } catch (e) {
-        if (e.message && e.message.includes('Timeout') && !e.message.includes('NotRegistered')) {
-            throw e;
+        if (e.message && e.message.includes('Timeout')) {
+            throw new Error("O WhatsApp Web demorou muito para responder. Pode ser lentidão na sincronização.");
         }
-
-        if (phoneStr.length === 13 && phoneStr.startsWith('55')) {
-            const fallbackStr = phoneStr.substring(0, 4) + phoneStr.substring(5); 
-            const fallbackId = fallbackStr + '@c.us';
-            console.log(`[Send] WhatsApp recusou. Fallback ativado (removendo 9): verificando ${fallbackId}...`);
-            
-            const isRegisteredFallback = await sendWithTimeout(client.isRegisteredUser(fallbackId), 15000).catch(()=>false);
-            if (!isRegisteredFallback) {
-                throw new Error(`Número inválido ou sem WhatsApp ativo: ${phoneStr}`);
-            }
-
-            if (media) await sendWithTimeout(client.sendMessage(fallbackId, media, { caption: message || '' }));
-            else await sendWithTimeout(client.sendMessage(fallbackId, message || ''));
-            return fallbackId;
-        } else if (phoneStr.length === 11 && !phoneStr.startsWith('55')) {
-            const fallbackStr = phoneStr.substring(0, 2) + phoneStr.substring(3); 
-            const fallbackId = fallbackStr + '@c.us';
-            console.log(`[Send] WhatsApp recusou. Fallback ativado (removendo 9): verificando ${fallbackId}...`);
-            
-            const isRegisteredFallback = await sendWithTimeout(client.isRegisteredUser(fallbackId), 15000).catch(()=>false);
-            if (!isRegisteredFallback) {
-                throw new Error(`Número inválido ou sem WhatsApp ativo: ${phoneStr}`);
-            }
-
-            if (media) await sendWithTimeout(client.sendMessage(fallbackId, media, { caption: message || '' }));
-            else await sendWithTimeout(client.sendMessage(fallbackId, message || ''));
-            return fallbackId;
-        }
-        
-        throw new Error(e.message === 'NotRegistered' ? 'Número inválido ou sem WhatsApp ativo.' : e.message);
+        throw e;
     }
 }
 

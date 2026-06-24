@@ -77,9 +77,14 @@ const sendWithTimeout = (promise, ms = 45000) => {
 
 async function safeSendMessage(phoneStr, message, mediaUrl = null) {
     let clean = String(phoneStr).replace(/\D/g, '');
-    if (clean.length === 10 || clean.length === 11) {
-        clean = '55' + clean;
-    }
+    
+    // O pulo do gato: Não adicionaremos o 55 aqui.
+    // Deixaremos o número exatamente como a admin digitou (ex: 31998793939).
+    // O método getNumberId do WhatsApp é inteligente o suficiente para:
+    // 1. Descobrir que é um número do Brasil (pela conta conectada).
+    // 2. Colocar o 55 no lugar certo.
+    // 3. Descobrir se tem o 9º dígito ou não.
+    // 4. Retornar o ID (@c.us) já perfeitamente mastigado.
 
     let media = null;
     if (mediaUrl && mediaUrl.startsWith('http')) {

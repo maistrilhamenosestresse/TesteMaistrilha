@@ -1,10 +1,16 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const express = require('express');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.WHATSAPP_API_KEY || 'M@isTrilh@S3cur3K3y2026';
+
+// Supabase (para ler a fila do banco)
+const SUPABASE_URL = process.env.SUPABASE_URL || '';
+const SUPABASE_KEY = process.env.SUPABASE_KEY || '';
+const supabase = SUPABASE_URL && SUPABASE_KEY ? createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 app.use(express.json());
 
@@ -49,40 +55,69 @@ const authMiddleware = (req, res, next) => {
 };
 
 // ---------------------------------------------------------
-// UTILITÁRIOS E FILA ANTI-BAN
+// UTILITÁRIOS E FILA ANTI-BAN (SUPABASE)
 // ---------------------------------------------------------
 function formatNumber(phone) {
-    let clean = phone.replace(/\D/g, ''); // Limpa tudo que não for número
+    let clean = phone.replace(/\D/g, ''); 
     if (!clean.startsWith('55') && clean.length <= 11) {
         clean = '55' + clean;
     }
     return clean + '@c.us';
 }
 
-const broadcastQueue = [];
 let isBroadcasting = false;
 
-async function processQueue() {
-    if (isBroadcasting || broadcastQueue.length === 0) return;
-    isBroadcasting = true;
+// Rotina que varre o Supabase a cada 1 minuto buscando mensagens agendadas
+async function pollSupabaseQueue() {
+    if (isBroadcasting || !isClientReady || !supabase) return;
+    
+    // Busca mensagens pendentes e que o horário agendado já chegou
+    const { data: messages, error } = await supabase
+        .from('whatsapp_messages')
+        .select('*')
+        .eq('status', 'pending')
+        .lte('scheduled_for', new Date().toISOString())
+        .order('scheduled_for', { ascending: true })
+        .limit(10); // Processa lotes de 10 por vez para evitar sobrecarga
 
-    while (broadcastQueue.length > 0) {
-        const task = broadcastQueue.shift();
+    if (error) {
+        console.error('[Queue Error]', error.message);
+        return;
+    }
+    
+    if (!messages || messages.length === 0) return;
+
+    isBroadcasting = true;
+    console.log(`[Queue] Encontradas ${messages.length} mensagens para disparo...`);
+
+    for (let i = 0; i < messages.length; i++) {
+        const task = messages[i];
         try {
-            await client.sendMessage(task.number, task.message);
-            console.log(`[Broadcast] Mensagem enviada para ${task.number}`);
-        } catch (error) {
-            console.log(`[Broadcast] Erro ao enviar para ${task.number}:`, error.message);
+            const formatted = formatNumber(task.client_phone);
+            await client.sendMessage(formatted, task.message);
+            console.log(`[Queue] Mensagem enviada com sucesso para ${formatted}`);
+            
+            // Marca como enviada
+            await supabase.from('whatsapp_messages').update({ status: 'sent' }).eq('id', task.id);
+        } catch (err) {
+            console.log(`[Queue] Erro ao enviar para ${task.client_phone}:`, err.message);
+            await supabase.from('whatsapp_messages').update({ status: 'error', error_log: err.message }).eq('id', task.id);
         }
         
-        if (broadcastQueue.length > 0) {
-            console.log(`[Broadcast] Pausa Anti-Ban de 60 segundos... (Restam: ${broadcastQueue.length} contatos na fila)`);
-            await new Promise(resolve => setTimeout(resolve, 60000)); // Delay exato de 1 minuto
+        // Delay anti-ban reduzido (15 segundos) entre envios do mesmo lote
+        if (i < messages.length - 1) {
+            console.log(`[Queue] Pausa Anti-Ban de 15 segundos...`);
+            await new Promise(resolve => setTimeout(resolve, 15000));
         }
     }
+    
     isBroadcasting = false;
-    console.log('[Broadcast] Fila de envios em massa totalmente concluída!');
+    console.log('[Queue] Lote finalizado!');
 }
+
+// Inicia o "Motor de Busca" a cada 60 segundos
+setInterval(pollSupabaseQueue, 60000);
+
 
 // ---------------------------------------------------------
 // ROTAS DA API DO WHATSAPP (Apenas chamadas autorizadas)
@@ -92,12 +127,11 @@ async function processQueue() {
 app.get('/api/status', authMiddleware, async (req, res) => {
     res.json({
         online: isClientReady,
-        queue_length: broadcastQueue.length,
         is_broadcasting: isBroadcasting
     });
 });
 
-// Envio Individual Imediato
+// Envio Individual Imediato (Sem ir para o banco, ex: Recibo do Checkout)
 app.post('/api/send/individual', authMiddleware, async (req, res) => {
     if (!isClientReady) return res.status(503).json({ error: 'WhatsApp não está conectado.' });
     
@@ -113,36 +147,13 @@ app.post('/api/send/individual', authMiddleware, async (req, res) => {
     }
 });
 
-// Envio em Massa (Broadcast com Fila)
-app.post('/api/send/broadcast', authMiddleware, async (req, res) => {
-    if (!isClientReady) return res.status(503).json({ error: 'WhatsApp não está conectado.' });
-    
-    const { contacts, message } = req.body; // contacts deve ser um array de telefones
-    if (!contacts || !Array.isArray(contacts) || !message) {
-        return res.status(400).json({ error: 'Formato inválido. contacts deve ser um array e message uma string.' });
-    }
-
-    // Adiciona todos os contatos na fila
-    contacts.forEach(phone => {
-        broadcastQueue.push({ number: formatNumber(phone), message });
-    });
-
-    // Inicia o processamento da fila sem travar a requisição atual
-    processQueue();
-
-    res.json({ 
-        success: true, 
-        message: `Foram adicionados ${contacts.length} contatos na fila de envio.`,
-        estimated_time_minutes: contacts.length // 1 contato = 1 minuto
-    });
-});
-
 
 // ---------------------------------------------------------
 // INICIALIZAÇÃO DO SERVIDOR E DO WHATSAPP
 // ---------------------------------------------------------
 app.listen(PORT, () => {
     console.log(`[Express] Servidor e API Central rodando na porta ${PORT}`);
+    if (!supabase) console.log('⚠️ AVISO: SUPABASE_URL não configurada no robô. A fila de agendamentos não funcionará.');
 });
 
 const client = new Client({
@@ -173,6 +184,8 @@ client.on('ready', () => {
     currentQR = '';
     isClientReady = true;
     console.log('✅ Robô do WhatsApp conectado e pronto para uso!');
+    // Tenta puxar a fila logo ao conectar
+    pollSupabaseQueue();
 });
 
 client.on('disconnected', (reason) => {

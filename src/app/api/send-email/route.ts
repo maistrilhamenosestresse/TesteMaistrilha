@@ -20,8 +20,8 @@ export async function POST(request: Request) {
       const { client } = data;
       mailOptions = {
         from: `Mais Trilha Menos Estresse <${process.env.GMAIL_USER}>`,
-        to: process.env.GMAIL_USER, // Envia para a própria administradora
-        subject: `Novo Seguro/Cadastro: ${client.full_name}`,
+        to: "wellingtonf.social@gmail.com, niveamariamagalhaes28@gmail.com",
+        subject: `Novo Cadastro Realizado: ${client.full_name}`,
         html: `
           <div style="font-family: sans-serif; max-w: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 10px; overflow: hidden;">
             <div style="background-color: #F17B37; color: white; padding: 20px; text-align: center;">

@@ -786,7 +786,7 @@ export default function AdminPage() {
                           <p className="text-gray-500 text-xs mt-0.5">{client.emergency_contact_phone}</p>
                         </td>
                         <td className="p-4 whitespace-normal min-w-[250px]">
-                          <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${client.health_notes && client.health_notes.toLowerCase() !== 'nenhuma' ? 'bg-red-100 text-red-700 border border-red-200 print:border-red-700' : 'bg-gray-100 text-gray-600'}`}>
+                          <span className={`block whitespace-pre-wrap text-xs font-bold px-2.5 py-1.5 rounded-md ${client.health_notes && client.health_notes.toLowerCase() !== 'nenhuma' && client.health_notes.toLowerCase() !== 'não tem' ? 'bg-red-50 text-red-700 border border-red-200 print:border-red-700 print:bg-transparent' : 'bg-gray-50 text-gray-600 print:bg-transparent'}`}>
                             {client.health_notes || "Nenhuma observação"}
                           </span>
                         </td>

@@ -20,6 +20,8 @@ export default function CadastroPage() {
     emergency_contact_name: "",
     emergency_contact_phone: "",
     health_notes: "",
+    allergies: "",
+    medical_conditions: "",
     photo: null as File | null
   });
 
@@ -58,6 +60,17 @@ export default function CadastroPage() {
     setIsLoading(true);
 
     try {
+      // 0. Verifica Duplicidade
+      const { data: existing } = await supabase.from('clients')
+        .select('id')
+        .or(`cpf.eq.${formData.cpf},phone.eq.${formData.phone}`);
+      
+      if (existing && existing.length > 0) {
+        alert("Ops! Já existe um cadastro no nosso sistema com esse mesmo CPF ou Telefone.");
+        setIsLoading(false);
+        return;
+      }
+
       let photoUrl = "";
 
       // 1. Upload Photo
@@ -78,6 +91,9 @@ export default function CadastroPage() {
         photoUrl = publicUrlData.publicUrl;
       }
 
+      // Concatena as observações de saúde
+      const formattedHealthNotes = `Alergias a medicação: ${formData.allergies || 'Não tem'}\nDoenças/Condições: ${formData.medical_conditions || 'Não tem'}\nOutras Notas: ${formData.health_notes || 'Nenhuma'}`;
+
       // 2. Save to Supabase
       const payload = {
         full_name: formData.full_name,
@@ -87,7 +103,7 @@ export default function CadastroPage() {
         phone: formData.phone,
         emergency_contact_name: formData.emergency_contact_name,
         emergency_contact_phone: formData.emergency_contact_phone,
-        health_notes: formData.health_notes || "Nenhuma",
+        health_notes: formattedHealthNotes,
         photo_url: photoUrl
       };
 
@@ -102,7 +118,7 @@ export default function CadastroPage() {
           type: 'new_registration',
           client: payload
         })
-      }).catch(err => console.error("Erro ignorado de email", err)); // Ignora erro de email por enquanto caso não configurado
+      }).catch(err => console.error("Erro ignorado de email", err));
 
       setIsSuccess(true);
       
@@ -346,12 +362,34 @@ export default function CadastroPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-gray-300 mb-2">Notas de Saúde (Opcional)</label>
+                  <label className="block text-sm font-bold text-gray-300 mb-2">Você possui alguma alergia a medicamentos?</label>
+                  <input 
+                    type="text" 
+                    value={formData.allergies}
+                    onChange={e => setFormData({...formData, allergies: e.target.value})}
+                    className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-[#F17B37] outline-none transition-all placeholder-gray-600" 
+                    placeholder="Ex: Alergia a Dipirona, Penicilina, etc. (Opcional)"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-300 mb-2">Possui alguma condição médica/doença?</label>
+                  <input 
+                    type="text" 
+                    value={formData.medical_conditions}
+                    onChange={e => setFormData({...formData, medical_conditions: e.target.value})}
+                    className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-[#F17B37] outline-none transition-all placeholder-gray-600" 
+                    placeholder="Ex: Pressão alta, asma, diabetes, etc. (Opcional)"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-300 mb-2">Outras Observações (Opcional)</label>
                   <textarea 
                     value={formData.health_notes}
                     onChange={e => setFormData({...formData, health_notes: e.target.value})}
                     className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-[#F17B37] outline-none transition-all placeholder-gray-600 resize-none h-24" 
-                    placeholder="Tipagem sanguínea, alergias a remédios, asma, etc..."
+                    placeholder="Tipagem sanguínea, cirurgias recentes ou outra nota."
                   />
                 </div>
 

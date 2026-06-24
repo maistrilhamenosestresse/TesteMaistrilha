@@ -67,7 +67,7 @@ function formatNumber(phone) {
     return clean;
 }
 
-const sendWithTimeout = (promise, ms = 10000) => {
+const sendWithTimeout = (promise, ms = 45000) => {
     return Promise.race([
         promise,
         new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout de comunicação (o WhatsApp Web demorou muito).')), ms))
@@ -78,7 +78,6 @@ async function safeSendMessage(phoneStr, message, mediaUrl = null) {
     let targetId = phoneStr + '@c.us';
     let media = null;
     
-    // Se for URL válida, tenta baixar
     if (mediaUrl && mediaUrl.startsWith('http')) {
         try {
             media = await MessageMedia.fromUrl(mediaUrl);
@@ -88,16 +87,15 @@ async function safeSendMessage(phoneStr, message, mediaUrl = null) {
     }
 
     try {
+        console.log(`[Send] Tentando enviar para ${targetId}...`);
         if (media) await sendWithTimeout(client.sendMessage(targetId, media, { caption: message || '' }));
         else await sendWithTimeout(client.sendMessage(targetId, message || ''));
         return targetId;
     } catch (e) {
-        // Fallback Inteligente do 9º dígito (Brasil)
-        // Se tiver 13 dígitos (55 + DDD + 9 + 8 digitos)
         if (phoneStr.length === 13 && phoneStr.startsWith('55')) {
-            const fallbackStr = phoneStr.substring(0, 4) + phoneStr.substring(5); // Remove o 5º caractere (o 9)
+            const fallbackStr = phoneStr.substring(0, 4) + phoneStr.substring(5); 
             const fallbackId = fallbackStr + '@c.us';
-            console.log(`[Queue] Fallback ativado (removendo 9): ${fallbackId}`);
+            console.log(`[Send] Fallback ativado (removendo 9): tentando para ${fallbackId}...`);
             
             if (media) await sendWithTimeout(client.sendMessage(fallbackId, media, { caption: message || '' }));
             else await sendWithTimeout(client.sendMessage(fallbackId, message || ''));

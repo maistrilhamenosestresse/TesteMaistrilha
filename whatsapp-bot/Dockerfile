@@ -12,14 +12,14 @@ RUN apt-get update \
 
 WORKDIR /app
 
-# Copia os arquivos de configuração
-COPY package*.json ./
+# Copia os arquivos de configuração do bot
+COPY whatsapp-bot/package*.json ./
 
-# Instala as dependências
+# Instala as dependências do bot
 RUN npm install
 
-# Copia o código fonte
-COPY . .
+# Copia o código fonte do bot
+COPY whatsapp-bot/ .
 
 # Expõe a porta que a Railway vai usar
 EXPOSE 3000

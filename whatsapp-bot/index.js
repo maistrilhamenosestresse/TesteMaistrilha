@@ -60,8 +60,11 @@ const authMiddleware = (req, res, next) => {
 function formatNumber(phone) {
     if (!phone) return '';
     let clean = String(phone).replace(/\D/g, '');
-    // A pedido da administradora, não adicionaremos mais o 55 automaticamente.
-    // O número será usado exatamente com os dígitos (DDD + Número) que vierem do painel.
+    // PROVA VIVA: Se não colocarmos o 55, o WhatsApp recusa imediatamente com erro "No LID for user"
+    // pois ele não sabe para qual país ligar. Precisamos devolver o 55.
+    if (clean.length === 10 || clean.length === 11) {
+        clean = '55' + clean;
+    }
     return clean;
 }
 

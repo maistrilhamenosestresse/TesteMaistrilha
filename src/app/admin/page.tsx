@@ -772,13 +772,14 @@ export default function AdminPage() {
 
             {/* Cabeçalho apenas visível na Impressão */}
             <div className="hidden print:block mb-8 text-center border-b-2 border-black pb-4">
+              <style>{`@media print { @page { size: landscape; margin: 10mm; } }`}</style>
               <h1 className="text-3xl font-black uppercase tracking-widest mb-2">Relatório de Seguros</h1>
               <p className="text-gray-600">Mais Trilha Menos Estresse - Data de Emissão: {new Date().toLocaleDateString('pt-BR')}</p>
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-gray-200">
-              <table className="w-full text-left text-sm whitespace-nowrap">
-                <thead className="bg-gray-100 text-gray-700">
+            <div className="overflow-x-auto print:overflow-visible rounded-xl border border-gray-200">
+              <table className="w-full text-left text-sm whitespace-nowrap print:whitespace-normal print:text-[10px]">
+                <thead className="bg-gray-100 text-gray-700 print:text-[10px]">
                   <tr>
                     <th className="p-4 font-bold border-b print:border-black">Cliente</th>
                     <th className="p-4 font-bold border-b print:border-black">Documentos</th>
@@ -872,7 +873,7 @@ export default function AdminPage() {
       {/* BOTÃO FLUTUANTE DO ASSISTENTE IA */}
       <button
         onClick={() => setIsAssistantOpen(true)}
-        className="fixed bottom-[90px] md:bottom-8 right-4 md:right-8 bg-transparent text-white rounded-full shadow-[0_0_20px_rgba(0,0,0,0.4)] hover:scale-110 transition-transform z-40 animate-bounce border-2 border-[#F17B37] overflow-hidden"
+        className="fixed bottom-[90px] md:bottom-8 right-4 md:right-8 bg-transparent text-white rounded-full shadow-[0_0_20px_rgba(0,0,0,0.4)] hover:scale-110 transition-transform z-40 animate-bounce border-2 border-[#F17B37] overflow-hidden print:hidden"
         title="Assistente IA (Chat Mágico)"
       >
         <img src="/logo.png" alt="Logo Mais Trilha" className="h-16 w-16 object-cover scale-110" />

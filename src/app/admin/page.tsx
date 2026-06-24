@@ -569,6 +569,17 @@ export default function AdminPage() {
                         </div>
                       </label>
                     </div>
+
+                    {(watch("notifyGroup") || watch("notifyClients")) && (
+                      <div className="mt-4 p-4 bg-[#e5ddd5] rounded-xl border border-gray-200 relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('https://i.pinimg.com/736x/8c/98/99/8c98994518b575bfd8c949e91d20548b.jpg')] bg-repeat"></div>
+                        <p className="text-xs font-bold text-gray-600 mb-2 relative z-10 flex items-center gap-1"><Eye className="w-3 h-3"/> Prévia da Mensagem (Segurança)</p>
+                        <div className="bg-[#dcf8c6] rounded-lg p-3 text-sm text-gray-900 shadow-sm relative z-10 w-[90%] md:w-[80%] whitespace-pre-wrap">
+                          {`🏕️ *NOVA TRILHA DISPONÍVEL!* 🥾\n\nPrepare sua mochila, porque a nossa nova aventura já está confirmada:\n\n⛰️ *${watch("title") || 'Nome da Trilha'}*\n📅 Data: ${(watch("date") || 'YYYY-MM-DD').split('-').reverse().join('/')}\n💰 Valor: R$ ${(watch("price") || '0.00').replace('.', ',')}\n\n👉 *Garanta sua vaga agora mesmo no link oficial:*\nhttps://maistrilha.vercel.app/agenda\n\nA natureza chama! Vem com a Mais Trilha Menos Estresse! 🌿`}
+                        </div>
+                        <p className="text-[10px] text-gray-500 mt-2 relative z-10">* A foto da trilha (Flyer) será anexada automaticamente acima deste texto.</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

@@ -41,16 +41,26 @@ export async function POST(req: Request) {
 
         if (groupId) {
           // Dispara a mensagem com a foto (flyer_url) se existir
+          const mediaUrl = agenda.flyer_url || (agenda.images && agenda.images[0]) || null;
           const sendRes = await fetch(`${BOT_URL}/api/group/send`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SECRET}` },
             body: JSON.stringify({ 
                 groupId, 
                 message: campaignMessage,
-                media_url: agenda.flyer_url || (agenda.images && agenda.images[0]) || null
+                media_url: mediaUrl
             })
           });
           groupResult = await sendRes.json();
+          
+          // Registrar histórico no banco de dados para o CRM poder ler
+          await supabase.from('whatsapp_messages').insert([{
+             client_name: '🌟 Grupo Oficial Mais Trilha',
+             client_phone: 'grupo_oficial',
+             message: campaignMessage,
+             media_url: mediaUrl,
+             status: 'sent'
+          }]);
         }
       } catch (e: any) {
         console.error("Erro ao enviar pro grupo:", e.message);

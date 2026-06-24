@@ -71,8 +71,16 @@ export default function WhatsAppAdmin() {
     if (data) {
       // Remover duplicatas por telefone
       const uniqueClients = Array.from(new Map(data.map(item => [item.phone, item])).values());
-      setClients(uniqueClients);
-      setFilteredClients(uniqueClients);
+      
+      const fakeGroup = {
+         id: 'group_oficial',
+         full_name: '🌟 Grupo Oficial Mais Trilha',
+         phone: 'grupo_oficial',
+         photo_url: 'https://cdn-icons-png.flaticon.com/512/1216/1216895.png'
+      };
+
+      setClients([fakeGroup, ...uniqueClients]);
+      setFilteredClients([fakeGroup, ...uniqueClients]);
     }
   };
 
@@ -369,11 +377,12 @@ export default function WhatsAppAdmin() {
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
-                        handleSendIndividual(e);
+                        if (activeContact.id !== 'group_oficial') handleSendIndividual(e);
                       }
                     }}
-                    placeholder="Mensagem"
-                    className="flex-1 bg-white border border-gray-300 rounded-2xl px-4 py-2 text-[15px] focus:outline-none focus:border-[#00a884] resize-none max-h-32 custom-scrollbar"
+                    disabled={activeContact.id === 'group_oficial'}
+                    placeholder={activeContact.id === 'group_oficial' ? "Somente as automações podem enviar mensagens para o grupo." : "Mensagem"}
+                    className="flex-1 bg-white border border-gray-300 rounded-2xl px-4 py-2 text-[15px] focus:outline-none focus:border-[#00a884] resize-none max-h-32 custom-scrollbar disabled:bg-gray-100 disabled:text-gray-400"
                   />
                   <button 
                     type="submit"

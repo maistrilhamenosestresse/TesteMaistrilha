@@ -19,8 +19,18 @@ export async function POST(req: Request) {
     let payload = {};
 
     if (action === 'individual') {
-      endpoint = '/api/send/individual';
-      payload = { phone, message };
+      if (phone === 'grupo_oficial') {
+         endpoint = '/api/group/send';
+         // O ID do grupo precisa ser o correto. Na automação ele entra via link.
+         // Mas se a admin quiser mandar algo manual, ela deve usar o link fixo para puxar o ID.
+         // Porém, a rota '/api/group/send' requer `groupId`.
+         // Como não temos o ID exato aqui (só o link), podemos pedir pro bot entrar pelo link e depois mandar.
+         // Mas para simplificar, usaremos uma rota nova no bot: `/api/group/send_by_link`!
+         // Ou melhor: Vamos impedir o envio manual no grupo pelo chat 1 pra 1 e mostrar um alerta no frontend.
+      } else {
+         endpoint = '/api/send/individual';
+         payload = { phone, message, media_url: body.media_url };
+      }
     } else if (action === 'trigger') {
       endpoint = '/api/trigger-queue';
       payload = {};

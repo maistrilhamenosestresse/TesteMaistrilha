@@ -6,15 +6,34 @@ const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+let currentQR = '';
+
 app.get('/', (req, res) => {
-    res.send('Bot do WhatsApp da Mais Trilha está online e rodando perfeitamente!');
+    if (currentQR) {
+        res.send(`
+            <html>
+                <body style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; font-family:sans-serif; background-color:#f0f2f5;">
+                    <h2 style="color:#333;">Escaneie o QR Code com seu WhatsApp</h2>
+                    <div id="qrcode" style="background:white; padding:20px; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.1);"></div>
+                    <p style="color:#666; margin-top:20px;">A página atualiza sozinha...</p>
+                    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+                    <script>
+                        new QRCode(document.getElementById("qrcode"), "${currentQR}");
+                        setTimeout(() => location.reload(), 5000);
+                    </script>
+                </body>
+            </html>
+        `);
+    } else {
+        res.send('<h1>✅ Bot do WhatsApp da Mais Trilha está ONLINE e Conectado!</h1>');
+    }
 });
 
 app.listen(PORT, () => {
-    console.log(`[Express] Servidor de Health Check rodando na porta ${PORT}`);
+    console.log(`[Express] Servidor rodando na porta ${PORT}`);
 });
 
-// Configuração do cliente do WhatsApp com argumentos essenciais para o servidor Linux da Railway
+// Configuração do cliente do WhatsApp
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
@@ -27,22 +46,22 @@ const client = new Client({
             '--disable-accelerated-2d-canvas',
             '--no-first-run',
             '--no-zygote',
-            '--single-process', // Apenas se houver problemas de memória
+            '--single-process',
             '--disable-gpu'
         ]
     }
 });
 
-// Geração do QR Code no terminal (Logs da Railway)
 client.on('qr', (qr) => {
+    currentQR = qr;
     console.log('========================================================');
-    console.log('ATENÇÃO: Escaneie o QR Code abaixo no painel da Railway!');
+    console.log('ATENÇÃO: O QR Code está disponível no site da Railway!');
+    console.log('Abra o link público da sua aplicação na Railway para escanear.');
     console.log('========================================================');
-    qrcode.generate(qr, { small: true });
 });
 
-// Confirmação de conexão
 client.on('ready', () => {
+    currentQR = '';
     console.log('✅ Robô do WhatsApp conectado e pronto para uso!');
 });
 

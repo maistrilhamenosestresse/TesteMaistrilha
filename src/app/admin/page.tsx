@@ -817,8 +817,8 @@ export default function AdminPage() {
                           <p className="text-gray-500 text-xs mt-0.5"><strong>RG:</strong> {client.rg}</p>
                         </td>
                         <td className="p-4">
-                          <p className="text-gray-900 font-bold">{client.phone}</p>
-                          <p className="text-gray-500 text-xs mt-0.5 break-all">{client.email || 'Sem e-mail'}</p>
+                          <p className="text-gray-900 font-bold whitespace-nowrap">{client.phone}</p>
+                          <p className="text-gray-500 text-xs mt-0.5 whitespace-nowrap">{client.email || 'Sem e-mail'}</p>
                         </td>
                         <td className="p-4">
                           <p className="text-gray-900 font-medium">{client.emergency_contact_name}</p>

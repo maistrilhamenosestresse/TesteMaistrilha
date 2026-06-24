@@ -14,6 +14,16 @@ const supabase = SUPABASE_URL && SUPABASE_KEY ? createClient(SUPABASE_URL, SUPAB
 
 app.use(express.json());
 
+// Habilita CORS para testes diretos pelo frontend do laboratório
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, x-api-key");
+    if (req.method === "OPTIONS") {
+        return res.sendStatus(200);
+    }
+    next();
+});
+
 let currentQR = '';
 let isClientReady = false;
 
@@ -78,9 +88,10 @@ const sendWithTimeout = (promise, ms = 45000) => {
 async function safeSendMessage(phoneStr, message, mediaUrl = null) {
     let clean = String(phoneStr).replace(/\D/g, '');
     
-    // Adiciona o DDI 55 (obrigatório para o Meta) se for um número do Brasil (10 ou 11 dígitos)
-    if (clean.length === 10 || clean.length === 11) {
-        clean = '55' + clean;
+    // Tesoura do 55: Garante que vamos passar APENAS o número local (DDD + Número)
+    // Isso imita exatamente o comportamento que a usuária testou manualmente e funcionou.
+    if (clean.startsWith('55') && (clean.length === 12 || clean.length === 13)) {
+        clean = clean.substring(2);
     }
 
     let media = null;
@@ -92,37 +103,26 @@ async function safeSendMessage(phoneStr, message, mediaUrl = null) {
         }
     }
 
-    const targetId = clean + '@c.us';
-
     try {
-        console.log(`[Send] Tentando enviar diretamente para ${targetId}...`);
+        console.log(`[Send] Pedindo ao WhatsApp para resolver o contato local: ${clean}...`);
         
-        // Tenta enviar com 25 segundos de timeout. 
-        // Se a biblioteca travar (porque o número é inválido no zap), cai no catch.
+        // A nova versão 1.34.7 do motor permite que o getNumberId funcione sem travar!
+        // Ele vai descobrir sozinho se o número precisa do 9 e se é do Brasil, e devolver o ID global (@c.us).
+        const numberDetails = await sendWithTimeout(client.getNumberId(clean), 15000);
+        
+        if (!numberDetails) {
+            throw new Error(`O WhatsApp não encontrou o número ${clean}.`);
+        }
+
+        const targetId = numberDetails._serialized;
+        console.log(`[Send] WhatsApp encontrou! ID oficial: ${targetId}. Enviando mensagem...`);
+        
         if (media) await sendWithTimeout(client.sendMessage(targetId, media, { caption: message || '' }), 25000);
         else await sendWithTimeout(client.sendMessage(targetId, message || ''), 25000);
         
         return targetId;
     } catch (e) {
-        console.log(`[Send] Falhou para ${targetId}. Motivo: ${e.message}`);
-        
-        // Se tem 13 dígitos (ex: 55 31 9 9956 7681), tira o 9 e tenta de novo!
-        if (clean.length === 13 && clean.startsWith('55')) {
-            const fallbackClean = clean.substring(0, 4) + clean.substring(5);
-            const fallbackId = fallbackClean + '@c.us';
-            console.log(`[Send] Fallback ativado (removendo 9): tentando para ${fallbackId}...`);
-            
-            try {
-                if (media) await sendWithTimeout(client.sendMessage(fallbackId, media, { caption: message || '' }), 25000);
-                else await sendWithTimeout(client.sendMessage(fallbackId, message || ''), 25000);
-                return fallbackId;
-            } catch (fallbackErr) {
-                console.log(`[Send] Fallback também falhou: ${fallbackErr.message}`);
-                throw new Error("O WhatsApp recusou o envio para as duas formatações (com e sem o 9). O número pode ser inválido.");
-            }
-        }
-        
-        throw new Error("Não foi possível enviar a mensagem. " + e.message);
+        throw new Error(e.message.includes('Timeout') ? 'O WhatsApp travou ao tentar resolver este número.' : e.message);
     }
 }
 

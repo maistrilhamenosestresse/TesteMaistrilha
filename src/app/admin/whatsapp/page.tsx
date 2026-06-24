@@ -161,12 +161,16 @@ export default function WhatsAppAdmin() {
                 className={`flex items-center gap-3 p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition ${selectedClients.has(client.id) ? 'bg-[#00a884]/10 hover:bg-[#00a884]/20' : ''}`}
               >
                 <div className="shrink-0 relative">
-                  <UserCircle2 className="w-10 h-10 text-gray-300" />
+                  {client.photo_url ? (
+                    <img src={client.photo_url} alt={client.full_name} className="w-10 h-10 rounded-full object-cover shadow-sm" />
+                  ) : (
+                    <UserCircle2 className="w-10 h-10 text-gray-300" />
+                  )}
                   <input 
                     type="checkbox" 
                     checked={selectedClients.has(client.id)}
                     readOnly
-                    className="absolute -bottom-1 -right-1 w-4 h-4 rounded border-gray-300 text-[#00a884] focus:ring-[#00a884]"
+                    className="absolute -bottom-1 -right-1 w-4 h-4 rounded border-gray-300 text-[#00a884] focus:ring-[#00a884] bg-white"
                   />
                 </div>
                 <div className="flex-1 min-w-0">

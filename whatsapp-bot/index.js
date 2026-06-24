@@ -157,19 +157,28 @@ app.post('/api/send/individual', authMiddleware, async (req, res) => {
     const { phone, message } = req.body;
     if (!phone || !message) return res.status(400).json({ error: 'Faltam os campos phone e message.' });
 
-    try {
-        const cleanPhone = formatNumber(phone);
-        const numberDetails = await client.getNumberId(cleanPhone);
-        
-        if (!numberDetails) {
-            return res.status(400).json({ error: 'Número inválido ou sem WhatsApp ativo.' });
+    const cleanPhone = formatNumber(phone);
+    
+    // Tenta enviar com máximo de 2 tentativas (Resiliência contra Timeout)
+    for (let tentativa = 1; tentativa <= 2; tentativa++) {
+        try {
+            const numberDetails = await client.getNumberId(cleanPhone);
+            if (!numberDetails) {
+                return res.status(400).json({ error: 'Número inválido ou sem WhatsApp ativo.' });
+            }
+            
+            const targetId = numberDetails._serialized;
+            await client.sendMessage(targetId, message);
+            return res.json({ success: true, formattedPhone: targetId });
+            
+        } catch (error) {
+            console.error(`Erro envio individual [Tentativa ${tentativa}]:`, error.message);
+            if (tentativa === 2) {
+                return res.status(500).json({ error: error.message });
+            }
+            // Aguarda 2 segundos antes do retry
+            await new Promise(r => setTimeout(r, 2000));
         }
-        
-        const targetId = numberDetails._serialized;
-        await client.sendMessage(targetId, message);
-        res.json({ success: true, formattedPhone: targetId });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
     }
 });
 

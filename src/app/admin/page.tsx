@@ -410,14 +410,21 @@ export default function AdminPage() {
     const s = (seconds % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   };
-
   return (
     <div className="min-h-screen bg-gray-50 pb-28 md:pb-12 text-gray-900 relative">
       <div className="p-4 md:p-12 max-w-6xl mx-auto space-y-6">
         
-        <header className="space-y-1 md:space-y-2 print:hidden">
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Painel da Administradora</h1>
-          <p className="text-sm md:text-base text-gray-500">Gerencie suas trilhas, clientes e seguros.</p>
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Painel da Administradora</h1>
+            <p className="text-sm md:text-base text-gray-500">Gerencie suas trilhas, clientes e seguros.</p>
+          </div>
+          <div className="flex gap-2">
+            <a href="/admin/whatsapp" className="flex items-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold py-2.5 px-5 rounded-xl transition-colors shadow-sm text-sm">
+              <MessageSquare className="w-5 h-5" />
+              <span>Central do WhatsApp</span>
+            </a>
+          </div>
         </header>
 
         <div className="flex bg-white rounded-xl shadow-sm border border-gray-100 p-1 mb-6 print:hidden">

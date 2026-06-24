@@ -92,26 +92,37 @@ async function safeSendMessage(phoneStr, message, mediaUrl = null) {
         }
     }
 
-    try {
-        console.log(`[Send] Puxando ID oficial do WhatsApp para ${clean}...`);
-        // Voltar a usar getNumberId, que além de validar, força o WhatsApp Web a carregar o contato na memória!
-        const numberDetails = await sendWithTimeout(client.getNumberId(clean), 15000);
-        
-        if (!numberDetails) {
-            throw new Error('O número não possui WhatsApp registrado ou o formato está incorreto.');
-        }
+    const targetId = clean + '@c.us';
 
-        const targetId = numberDetails._serialized;
-        console.log(`[Send] ID encontrado (${targetId}). Tentando enviar...`);
+    try {
+        console.log(`[Send] Tentando enviar diretamente para ${targetId}...`);
         
-        if (media) await sendWithTimeout(client.sendMessage(targetId, media, { caption: message || '' }));
-        else await sendWithTimeout(client.sendMessage(targetId, message || ''));
+        // Tenta enviar com 25 segundos de timeout. 
+        // Se a biblioteca travar (porque o número é inválido no zap), cai no catch.
+        if (media) await sendWithTimeout(client.sendMessage(targetId, media, { caption: message || '' }), 25000);
+        else await sendWithTimeout(client.sendMessage(targetId, message || ''), 25000);
+        
         return targetId;
     } catch (e) {
-        if (e.message && e.message.includes('Timeout')) {
-            throw new Error("O WhatsApp Web demorou muito para responder. Pode ser lentidão na sincronização.");
+        console.log(`[Send] Falhou para ${targetId}. Motivo: ${e.message}`);
+        
+        // Se tem 13 dígitos (ex: 55 31 9 9956 7681), tira o 9 e tenta de novo!
+        if (clean.length === 13 && clean.startsWith('55')) {
+            const fallbackClean = clean.substring(0, 4) + clean.substring(5);
+            const fallbackId = fallbackClean + '@c.us';
+            console.log(`[Send] Fallback ativado (removendo 9): tentando para ${fallbackId}...`);
+            
+            try {
+                if (media) await sendWithTimeout(client.sendMessage(fallbackId, media, { caption: message || '' }), 25000);
+                else await sendWithTimeout(client.sendMessage(fallbackId, message || ''), 25000);
+                return fallbackId;
+            } catch (fallbackErr) {
+                console.log(`[Send] Fallback também falhou: ${fallbackErr.message}`);
+                throw new Error("O WhatsApp recusou o envio para as duas formatações (com e sem o 9). O número pode ser inválido.");
+            }
         }
-        throw e;
+        
+        throw new Error("Não foi possível enviar a mensagem. " + e.message);
     }
 }
 

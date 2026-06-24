@@ -58,16 +58,18 @@ const authMiddleware = (req, res, next) => {
 // UTILITÁRIOS E FILA ANTI-BAN (SUPABASE)
 // ---------------------------------------------------------
 function formatNumber(phone) {
-    let clean = phone.replace(/\D/g, ''); 
-    if (!clean.startsWith('55') && clean.length <= 11) {
+    // Remove tudo que não é número
+    let clean = String(phone).replace(/\D/g, ''); 
+    // Garante que comece com 55 (Brasil) se tiver tamanho DDD+Número
+    if (!clean.startsWith('55') && clean.length >= 10 && clean.length <= 11) {
         clean = '55' + clean;
     }
-    return clean + '@c.us';
+    return clean;
 }
 
 let isBroadcasting = false;
 
-// Rotina que varre o Supabase a cada 1 minuto buscando mensagens agendadas
+// Rotina que varre o Supabase a cada 15 segundos buscando mensagens agendadas
 async function pollSupabaseQueue() {
     if (isBroadcasting || !isClientReady || !supabase) return;
     
@@ -78,7 +80,7 @@ async function pollSupabaseQueue() {
         .eq('status', 'pending')
         .lte('scheduled_for', new Date().toISOString())
         .order('scheduled_for', { ascending: true })
-        .limit(10); // Processa lotes de 10 por vez para evitar sobrecarga
+        .limit(10); // Processa lotes de 10 por vez
 
     if (error) {
         console.error('[Queue Error]', error.message);
@@ -93,9 +95,19 @@ async function pollSupabaseQueue() {
     for (let i = 0; i < messages.length; i++) {
         const task = messages[i];
         try {
-            const formatted = formatNumber(task.client_phone);
-            await client.sendMessage(formatted, task.message);
-            console.log(`[Queue] Mensagem enviada com sucesso para ${formatted}`);
+            const cleanPhone = formatNumber(task.client_phone);
+            
+            // VERIFICAÇÃO INTELIGENTE DO WHATSAPP (Resolve o problema do 9º dígito)
+            const numberDetails = await client.getNumberId(cleanPhone);
+            
+            if (!numberDetails) {
+                throw new Error('O número não possui WhatsApp registrado.');
+            }
+
+            const targetId = numberDetails._serialized;
+            
+            await client.sendMessage(targetId, task.message);
+            console.log(`[Queue] Mensagem enviada com sucesso para ${targetId}`);
             
             // Marca como enviada
             await supabase.from('whatsapp_messages').update({ status: 'sent' }).eq('id', task.id);
@@ -115,7 +127,7 @@ async function pollSupabaseQueue() {
     console.log('[Queue] Lote finalizado!');
 }
 
-// Inicia o "Motor de Busca" a cada 15 segundos para ser mais ágil
+// Inicia o "Motor de Busca" a cada 15 segundos
 setInterval(pollSupabaseQueue, 15000);
 
 
@@ -131,14 +143,14 @@ app.get('/api/status', authMiddleware, async (req, res) => {
     });
 });
 
-// Força o robô a puxar a fila imediatamente (Usado pela Vercel após agendar)
+// Força o robô a puxar a fila imediatamente
 app.post('/api/trigger-queue', authMiddleware, async (req, res) => {
     if (!isClientReady || isBroadcasting) return res.json({ success: true, message: 'Fila já está rodando ou robô offline.' });
     pollSupabaseQueue();
     res.json({ success: true, message: 'Fila disparada com sucesso!' });
 });
 
-// Envio Individual Imediato (Sem ir para o banco, ex: Recibo do Checkout)
+// Envio Individual Imediato (Usado pelo novo Chat 1 pra 1 e pelo Recibo de Seguro)
 app.post('/api/send/individual', authMiddleware, async (req, res) => {
     if (!isClientReady) return res.status(503).json({ error: 'WhatsApp não está conectado.' });
     
@@ -146,9 +158,16 @@ app.post('/api/send/individual', authMiddleware, async (req, res) => {
     if (!phone || !message) return res.status(400).json({ error: 'Faltam os campos phone e message.' });
 
     try {
-        const formatted = formatNumber(phone);
-        await client.sendMessage(formatted, message);
-        res.json({ success: true, formattedPhone: formatted });
+        const cleanPhone = formatNumber(phone);
+        const numberDetails = await client.getNumberId(cleanPhone);
+        
+        if (!numberDetails) {
+            return res.status(400).json({ error: 'Número inválido ou sem WhatsApp ativo.' });
+        }
+        
+        const targetId = numberDetails._serialized;
+        await client.sendMessage(targetId, message);
+        res.json({ success: true, formattedPhone: targetId });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

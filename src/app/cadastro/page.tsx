@@ -180,7 +180,7 @@ export default function CadastroPage() {
         body: JSON.stringify({
           action: 'individual',
           phone: savedClient.phone,
-          message: `Olá *${savedClient.full_name.split(' ')[0]}*! Recebemos seu cadastro e Termo de Responsabilidade com sucesso.\n\nBem-vindo(a) à aventura com a *Mais Trilha e Menos Estresse*! 🏕️🥾\n\nEm breve enviaremos as orientações e horários no grupo oficial. Salve nosso contato!`
+          message: `Olá *${savedClient.full_name.split(' ')[0]}*! Recebemos seu cadastro e Termo de Responsabilidade com sucesso.\n\nBem-vindo(a) à aventura com a *Mais Trilha Menos Estresse*! 🏕️🥾\n\nEm breve enviaremos as orientações e horários no grupo oficial. Salve nosso contato!`
         })
       }).catch(err => console.error("Erro ignorado do WhatsApp API", err));
 
@@ -511,7 +511,7 @@ export default function CadastroPage() {
                   <p>Declaro estar ciente de que a expedição é uma atividade de turismo de aventura e montanhismo, realizada em ambiente natural, estando sujeita a riscos inerentes que não podem ser totalmente eliminados.</p>
                   <p>Declaro voluntariamente que gozo de boa saúde física e mental e que não possuo nenhuma contraindicação médica que me impeça de realizar esforços físicos de intensidade severa.</p>
                   <p>Estou ciente de que é minha estrita obrigação portar e utilizar os equipamentos e vestuários recomendados.</p>
-                  <p>Ao assinar este termo de livre e espontânea vontade, assumo integralmente todos os riscos associados à expedição. Isento expressamente a organização Mais Trilha e Menos Estresse de qualquer responsabilidade civil ou criminal.</p>
+                  <p>Ao assinar este termo de livre e espontânea vontade, assumo integralmente todos os riscos associados à expedição. Isento expressamente a organização Mais Trilha Menos Estresse de qualquer responsabilidade civil ou criminal.</p>
                   <p>Autorizo a equipe a tomar todas as medidas cabíveis de primeiros socorros e, se necessário, acionar serviços oficiais de resgate.</p>
                 </div>
 

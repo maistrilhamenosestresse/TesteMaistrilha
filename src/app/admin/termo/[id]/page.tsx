@@ -49,7 +49,7 @@ export default function TermoPrintPage() {
         
         <div className="text-center mb-8 border-b-2 border-black pb-6">
           <h1 className="text-2xl font-black text-[#113a5d] mb-4 uppercase">TERMO DE RECONHECIMENTO DE RISCO E ISENÇÃO DE RESPONSABILIDADE</h1>
-          <p className="text-gray-600 text-sm">Expedição: Trilha Mais Trilha • Organizadora: Mais Trilha e Menos Estresse</p>
+          <p className="text-gray-600 text-sm">Expedição: Trilha Mais Trilha • Organizadora: Mais Trilha Menos Estresse</p>
         </div>
 
         <div className="mb-8">
@@ -128,7 +128,7 @@ export default function TermoPrintPage() {
             <h2 className="font-bold text-[#113a5d]">4. Equipamentos e Vestuário</h2>
           </div>
           <p className="text-base md:text-sm print:text-sm text-justify">
-            Estou ciente de que é minha estrita obrigação portar e utilizar os equipamentos e vestuários recomendados e exigidos pela organização Mais Trilha e Menos Estresse. A organização reserva-se o direito de vetar a minha participação, sem direito a reembolso, caso seja constatada a ausência de itens essenciais para a minha própria segurança.
+            Estou ciente de que é minha estrita obrigação portar e utilizar os equipamentos e vestuários recomendados e exigidos pela organização Mais Trilha Menos Estresse. A organização reserva-se o direito de vetar a minha participação, sem direito a reembolso, caso seja constatada a ausência de itens essenciais para a minha própria segurança.
           </p>
         </div>
 
@@ -138,7 +138,7 @@ export default function TermoPrintPage() {
           </div>
           <p className="text-base md:text-sm print:text-sm text-justify mb-2">Comprometo-me formalmente a:</p>
           <ul className="text-base md:text-sm print:text-sm list-disc pl-8 space-y-2 md:space-y-1">
-            <li>Seguir rigorosamente todas as instruções, orientações técnicas e decisões emitidas pelos guias e líderes da Mais Trilha e Menos Estresse durante todo o percurso;</li>
+            <li>Seguir rigorosamente todas as instruções, orientações técnicas e decisões emitidas pelos guias e líderes da Mais Trilha Menos Estresse durante todo o percurso;</li>
             <li>Respeitar integralmente as normas do Parque ou local da trilha, zelando pela preservação ambiental;</li>
             <li>Compreender e aceitar que o guia líder detém autoridade total para alterar, interromper ou cancelar a subida ou o cronograma caso julgue que as condições ambientais, climáticas ou de saúde configurem risco à segurança geral.</li>
           </ul>
@@ -149,7 +149,7 @@ export default function TermoPrintPage() {
             <h2 className="font-bold text-[#113a5d]">6. Isenção de Responsabilidade</h2>
           </div>
           <p className="text-base md:text-sm print:text-sm text-justify">
-            Ao assinar este termo de livre e espontânea vontade, assumo integralmente todos os riscos associados à expedição. Isento expressamente a organização Mais Trilha e Menos Estresse de qualquer responsabilidade civil ou criminal por eventuais danos físicos, morais, materiais, lesões, invalidez ou acidentes que possam ocorrer comigo durante o evento, decorrentes de minha própria imprudência.
+            Ao assinar este termo de livre e espontânea vontade, assumo integralmente todos os riscos associados à expedição. Isento expressamente a organização Mais Trilha Menos Estresse de qualquer responsabilidade civil ou criminal por eventuais danos físicos, morais, materiais, lesões, invalidez ou acidentes que possam ocorrer comigo durante o evento, decorrentes de minha própria imprudência.
           </p>
         </div>
 
@@ -158,7 +158,7 @@ export default function TermoPrintPage() {
             <h2 className="font-bold text-[#113a5d]">7. Atendimento de Emergência</h2>
           </div>
           <p className="text-base md:text-sm print:text-sm text-justify">
-            Autorizo a equipe da Mais Trilha e Menos Estresse a tomar todas as medidas cabíveis de primeiros socorros e, se necessário, acionar serviços oficiais de resgate. Fica estipulado que eventuais custos médicos adicionais serão de minha inteira e exclusiva responsabilidade.
+            Autorizo a equipe da Mais Trilha Menos Estresse a tomar todas as medidas cabíveis de primeiros socorros e, se necessário, acionar serviços oficiais de resgate. Fica estipulado que eventuais custos médicos adicionais serão de minha inteira e exclusiva responsabilidade.
           </p>
         </div>
 

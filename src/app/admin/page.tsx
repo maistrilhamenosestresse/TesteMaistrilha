@@ -78,6 +78,11 @@ export default function AdminPage() {
   const [isAssistantProcessing, setIsAssistantProcessing] = useState(false);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([{ sender: 'bot', text: 'Olá! Sou sua assistente. Pergunte qualquer coisa ou me mande cadastrar uma trilha!' }]);
   const [chatInput, setChatInput] = useState("");
+
+  // --- Estados de Notificações ---
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
 
   const selectedFlyer = watch("flyer");

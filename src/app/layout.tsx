@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://maistrilha-git-main-mais-trilha.vercel.app'),
+  metadataBase: new URL('https://maistrilhasmenosestresse.com'),
   title: "Mais Trilha Menos Estresse",
   description: "A nossa agenda oficial chegou! Confira nossas próximas trilhas, veja as fotos, roteiros e garanta sua vaga.",
   openGraph: {

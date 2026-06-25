@@ -429,13 +429,13 @@ export default function AdminPage() {
         <div className="flex bg-white rounded-xl shadow-sm border border-gray-100 p-1 mb-6 print:hidden">
           <button 
             onClick={() => setMainTab('trilhas')} 
-            className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${mainTab === 'trilhas' ? 'bg-[#1D2A3A] text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
+            className={`flex-1 min-w-0 py-2.5 px-2 text-xs sm:text-sm font-bold rounded-lg transition-all truncate ${mainTab === 'trilhas' ? 'bg-[#1D2A3A] text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
           >
             ⛰️ Trilhas
           </button>
           <button 
             onClick={() => setMainTab('clientes')} 
-            className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${mainTab === 'clientes' ? 'bg-[#1D2A3A] text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
+            className={`flex-1 min-w-0 py-2.5 px-2 text-xs sm:text-sm font-bold rounded-lg transition-all truncate ${mainTab === 'clientes' ? 'bg-[#1D2A3A] text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
           >
             👥 Clientes e Seguros
           </button>
@@ -726,8 +726,8 @@ export default function AdminPage() {
                   agendas.map((agenda) => (
                     <div key={agenda.id} className={`flex items-center justify-between p-3.5 bg-gray-50 border rounded-xl hover:border-gray-300 transition-all ${editingAgenda?.id === agenda.id ? 'border-[#F17B37] bg-[#F17B37]/5 shadow-sm' : 'border-gray-100 hover:shadow-md'}`}>
                       <div className="min-w-0 flex-1 pr-3">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="text-sm font-bold text-gray-800 truncate">{agenda.title}</p>
+                        <div className="flex items-center gap-2 mb-1 min-w-0">
+                          <p className="text-sm font-bold text-gray-800 truncate flex-1">{agenda.title}</p>
                           <span className="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 border border-blue-200 shrink-0 shadow-sm" title="Pessoas que entraram nesta trilha">
                             <Eye className="h-3 w-3" /> {agenda.views || 0}
                           </span>
@@ -874,7 +874,7 @@ export default function AdminPage() {
               <div>
                 <p className="font-bold text-blue-900">Link Público de Cadastro</p>
                 <p className="text-sm text-blue-700 mb-2">Envie este link para as pessoas preencherem o formulário no celular:</p>
-                <a href="/cadastro" target="_blank" className="font-mono bg-white text-blue-600 px-3 py-1.5 rounded border border-blue-200 text-sm hover:bg-blue-600 hover:text-white transition">
+                <a href="/cadastro" target="_blank" className="font-mono bg-white text-blue-600 px-3 py-1.5 rounded border border-blue-200 text-sm hover:bg-blue-600 hover:text-white transition block break-all w-full text-center sm:text-left">
                   www.maistrilhasmenosestresse.com/cadastro
                 </a>
               </div>

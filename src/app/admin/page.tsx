@@ -725,20 +725,21 @@ export default function AdminPage() {
                 ) : (
                   agendas.map((agenda) => (
                     <div key={agenda.id} className={`flex items-center justify-between p-3.5 bg-gray-50 border rounded-xl hover:border-gray-300 transition-all ${editingAgenda?.id === agenda.id ? 'border-[#F17B37] bg-[#F17B37]/5 shadow-sm' : 'border-gray-100 hover:shadow-md'}`}>
-                      <div className="min-w-0 flex-1 pr-3">
+                      <div className="min-w-0 flex-1 pr-2 sm:pr-3">
                         <div className="flex items-center gap-2 mb-1 min-w-0">
                           <p className="text-sm font-bold text-gray-800 truncate flex-1">{agenda.title}</p>
                           <span className="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 border border-blue-200 shrink-0 shadow-sm" title="Pessoas que entraram nesta trilha">
                             <Eye className="h-3 w-3" /> {agenda.views || 0}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-500 font-medium">
-                          <span className="flex items-center gap-1"><Calendar className="h-3 w-3 text-gray-400" /> {formatDateDisplay(agenda.date)}</span>
-                          <span>•</span>
-                          <span className="flex items-center gap-1 text-green-600"><DollarSign className="h-3 w-3" /> {agenda.price}</span>
+                        {/* AQUI ESTÁ A MÁGICA: flex-wrap e shrink-0 na linha de detalhes */}
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500 font-medium min-w-0">
+                          <span className="flex items-center gap-1 shrink-0"><Calendar className="h-3 w-3 text-gray-400" /> {formatDateDisplay(agenda.date)}</span>
+                          <span className="hidden sm:block">•</span>
+                          <span className="flex items-center gap-1 text-green-600 shrink-0"><DollarSign className="h-3 w-3" /> {agenda.price}</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="flex items-center gap-1.5 shrink-0 ml-2">
                         <button 
                           onClick={() => handleEdit(agenda)}
                           className={`p-2 rounded-lg transition-colors ${editingAgenda?.id === agenda.id ? 'text-white bg-[#F17B37]' : 'text-gray-400 hover:text-white hover:bg-[#F17B37]'}`}

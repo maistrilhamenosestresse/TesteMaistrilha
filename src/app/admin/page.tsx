@@ -500,9 +500,11 @@ export default function AdminPage() {
       };
 
       if (editingAgenda) {
-        await supabase.from('agendas').update(payload).eq('id', editingAgenda.id);
+        const { error } = await supabase.from('agendas').update(payload).eq('id', editingAgenda.id);
+        if (error) throw error;
       } else {
-        await supabase.from('agendas').insert([payload]);
+        const { error } = await supabase.from('agendas').insert([payload]);
+        if (error) throw error;
       }
       
       setIsFormModalOpen(false);

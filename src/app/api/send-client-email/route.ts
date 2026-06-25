@@ -1,76 +1,97 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
-import PDFDocument from 'pdfkit';
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
 async function generateInsuranceSummaryPDF(): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 50, size: 'A4' });
-    const buffers: Buffer[] = [];
+  const pdfDoc = await PDFDocument.create();
+  const page = pdfDoc.addPage([595.28, 841.89]); // A4
+  
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const italicFont = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
+  
+  const primaryColor = rgb(17/255, 58/255, 93/255); // #113a5d
+  const black = rgb(0.2, 0.2, 0.2); // #333
 
-    doc.on('data', buffers.push.bind(buffers));
-    doc.on('end', () => resolve(Buffer.concat(buffers)));
-    doc.on('error', reject);
+  let y = 770;
+  const margin = 50;
+  const maxW = 595.28 - (margin * 2);
 
-    // HEADER
-    doc.fontSize(20).font('Helvetica-Bold').text('RESUMO DO SEGURO AVENTURA', { align: 'center' });
-    doc.moveDown(1);
-    
-    doc.fontSize(12).font('Helvetica').text('Este documento é um resumo das coberturas e procedimentos do seu seguro, garantindo a sua tranquilidade durante a atividade.', { align: 'justify' });
-    doc.moveDown(2);
+  // Helper to draw text
+  const writeText = (text: string, f: any, size: number, color: any, indent = 0) => {
+    page.drawText(text, { x: margin + indent, y, size, font: f, color });
+    y -= (size + 10);
+  };
 
-    // COBERTURAS
-    doc.fontSize(16).font('Helvetica-Bold').text('SUAS COBERTURAS (PLANO 2)');
-    doc.moveDown(0.5);
-    
-    doc.fontSize(12).font('Helvetica-Bold').text('• Morte Acidental (MA): R$ 30.000,00', { indent: 10 });
-    doc.font('Helvetica').text('Garante o pagamento de indenização em caso de morte do Segurado ocasionada exclusivamente por acidente pessoal coberto.', { indent: 25 });
-    doc.moveDown(0.5);
+  const writeMultiLine = (text: string, f: any, size: number, color: any, indent = 0) => {
+    const words = text.split(' ');
+    let line = '';
+    for (let i = 0; i < words.length; i++) {
+      const testLine = line + words[i] + ' ';
+      const textWidth = f.widthOfTextAtSize(testLine, size);
+      if (textWidth > (maxW - indent) && i > 0) {
+        page.drawText(line, { x: margin + indent, y, size, font: f, color });
+        line = words[i] + ' ';
+        y -= (size + 5);
+      } else {
+        line = testLine;
+      }
+    }
+    page.drawText(line, { x: margin + indent, y, size, font: f, color });
+    y -= (size + 15);
+  };
 
-    doc.font('Helvetica-Bold').text('• Invalidez Permanente (IPA): R$ 30.000,00', { indent: 10 });
-    doc.font('Helvetica').text('Garante o pagamento de indenização relativa à perda, à redução ou à impotência funcional definitiva de um membro ou órgão por lesão física.', { indent: 25 });
-    doc.moveDown(0.5);
+  writeText('RESUMO DO SEGURO AVENTURA', boldFont, 18, primaryColor, 120);
+  y -= 10;
+  
+  writeMultiLine('Este documento é um resumo das coberturas e procedimentos do seu seguro, garantindo a sua tranquilidade durante a atividade.', font, 12, black);
+  y -= 10;
 
-    doc.font('Helvetica-Bold').text('• DMHO: R$ 3.000,00', { indent: 10 });
-    doc.font('Helvetica').text('Garante o reembolso de despesas médicas, hospitalares e odontológicas efetuadas para o tratamento após a ocorrência de acidente pessoal coberto.', { indent: 25 });
-    doc.moveDown(0.5);
+  writeText('SUAS COBERTURAS (PLANO 2)', boldFont, 14, primaryColor);
+  y -= 5;
+  
+  writeText('• Morte Acidental (MA): R$ 30.000,00', boldFont, 12, black, 10);
+  writeMultiLine('Garante o pagamento de indenização em caso de morte do Segurado ocasionada exclusivamente por acidente pessoal coberto.', font, 11, black, 20);
 
-    doc.font('Helvetica-Bold').text('• Cobertura de Deslocamento:', { indent: 10 });
-    doc.font('Helvetica').text('Garantida em todo território nacional de ida e volta entre os locais de embarque/desembarque e o local do evento.', { indent: 25 });
-    doc.moveDown(2);
+  writeText('• Invalidez Permanente (IPA): R$ 30.000,00', boldFont, 12, black, 10);
+  writeMultiLine('Garante o pagamento de indenização relativa à perda, à redução ou à impotência funcional definitiva de um membro ou órgão por lesão física.', font, 11, black, 20);
 
-    // PROCEDIMENTOS EM CASO DE SINISTRO
-    doc.fontSize(16).font('Helvetica-Bold').text('PROCEDIMENTOS EM CASO DE ACIDENTE');
-    doc.moveDown(0.5);
-    
-    doc.fontSize(12).font('Helvetica-Bold').text('1. Comunicação Imediata:');
-    doc.font('Helvetica').text('Ocorrendo um acidente, o participante deve imediatamente comunicar o guia responsável pela atividade. Não será possível a indenização se o responsável não tiver conhecimento do acidente.', { align: 'justify' });
-    doc.moveDown(0.5);
+  writeText('• DMHO: R$ 3.000,00', boldFont, 12, black, 10);
+  writeMultiLine('Garante o reembolso de despesas médicas, hospitalares e odontológicas efetuadas para o tratamento após a ocorrência de acidente.', font, 11, black, 20);
 
-    doc.font('Helvetica-Bold').text('2. Atendimento Médico:');
-    doc.font('Helvetica').text('Toda energia da equipe deve ser voltada ao atendimento da vítima. O primeiro atendimento médico deverá ocorrer no mesmo dia do acidente ou no máximo em até 5 (cinco) dias.', { align: 'justify' });
-    doc.moveDown(0.5);
+  writeText('• Cobertura de Deslocamento:', boldFont, 12, black, 10);
+  writeMultiLine('Garantida em todo território nacional de ida e volta entre os locais de embarque/desembarque e o local do evento.', font, 11, black, 20);
+  y -= 10;
 
-    doc.font('Helvetica-Bold').text('3. Documentação Exigida para Reembolso:');
-    const docs = [
-      '• Foto do segurado no local do acidente;',
-      '• Prontuário Médico constando data e procedimentos realizados;',
-      '• Relatório detalhado do médico atestando o tratamento realizado;',
-      '• Notas fiscais originais (Não será aceito recibo);',
-      '• Comprovação dos exames médicos e Receita Médica;',
-      '• Fotocópia do RG/CPF e comprovante de residência;',
-      '• Comprovante bancário em nome do Segurado.'
-    ];
-    docs.forEach(item => {
-      doc.font('Helvetica').text(item, { indent: 20 });
-    });
+  writeText('PROCEDIMENTOS EM CASO DE ACIDENTE', boldFont, 14, primaryColor);
+  y -= 5;
 
-    doc.moveDown(2);
-
-    // FOOTER
-    doc.fontSize(10).font('Helvetica-Oblique').fillColor('gray').text('Mais Trilha Menos Estresse - Turismo de Aventura Responsável.', { align: 'center' });
-
-    doc.end();
+  writeText('1. Comunicação Imediata:', boldFont, 12, black);
+  writeMultiLine('O participante deve comunicar o guia responsável. Não haverá indenização se o responsável não tiver conhecimento do acidente no local.', font, 11, black);
+  
+  writeText('2. Atendimento Médico:', boldFont, 12, black);
+  writeMultiLine('O primeiro atendimento médico deverá ocorrer no mesmo dia do acidente ou no máximo em até 5 (cinco) dias.', font, 11, black);
+  
+  writeText('3. Documentação Exigida para Reembolso:', boldFont, 12, black);
+  const docs = [
+    '• Foto do segurado no local do acidente;',
+    '• Prontuário Médico constando data e procedimentos realizados;',
+    '• Relatório detalhado do médico atestando o tratamento realizado;',
+    '• Notas fiscais originais (Não será aceito recibo);',
+    '• Comprovação dos exames médicos e Receita Médica;',
+    '• Fotocópia do RG/CPF e comprovante de residência;',
+    '• Comprovante bancário em nome do Segurado.'
+  ];
+  docs.forEach(item => {
+    writeText(item, font, 11, black, 10);
+    y += 5; // reduce spacing slightly
   });
+
+  y -= 30;
+  writeText('Mais Trilha Menos Estresse - Turismo de Aventura Responsável.', italicFont, 10, rgb(0.5, 0.5, 0.5), 100);
+
+  const pdfBytes = await pdfDoc.save();
+  return Buffer.from(pdfBytes);
 }
 
 export async function POST(request: Request) {

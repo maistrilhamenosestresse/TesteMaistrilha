@@ -399,7 +399,7 @@ export default function AdminPage() {
     }
   };
 
-  const globalSiteUrl = "https://maistrilha.vercel.app/agenda";
+  const globalSiteUrl = "https://www.maistrilhasmenosestresse.com/agenda";
   const whatsappMessage = `⛰️ A nossa agenda oficial chegou! Prepare as botas!\n\nClique no link abaixo para conferir as nossas próximas trilhas, ver as fotos, roteiros e garantir sua vaga:\n\n👉 ${globalSiteUrl}`;
   const whatsappLink = `https://wa.me/?text=${encodeURIComponent(whatsappMessage)}`;
 
@@ -800,7 +800,7 @@ export default function AdminPage() {
                   {clients.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="p-8 text-center text-gray-400">
-                        Nenhum cliente cadastrado ainda. Compartilhe o link <strong className="text-[#F17B37]">maistrilha.vercel.app/cadastro</strong>
+                        Nenhum cliente cadastrado ainda. Compartilhe o link <strong className="text-[#F17B37]">www.maistrilhasmenosestresse.com/cadastro</strong>
                       </td>
                     </tr>
                   ) : (
@@ -875,7 +875,7 @@ export default function AdminPage() {
                 <p className="font-bold text-blue-900">Link Público de Cadastro</p>
                 <p className="text-sm text-blue-700 mb-2">Envie este link para as pessoas preencherem o formulário no celular:</p>
                 <a href="/cadastro" target="_blank" className="font-mono bg-white text-blue-600 px-3 py-1.5 rounded border border-blue-200 text-sm hover:bg-blue-600 hover:text-white transition">
-                  maistrilha.vercel.app/cadastro
+                  www.maistrilhasmenosestresse.com/cadastro
                 </a>
               </div>
             </div>

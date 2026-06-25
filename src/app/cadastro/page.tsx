@@ -7,7 +7,9 @@ import { Camera, User, FileText, Calendar, Phone, HeartPulse, AlertTriangle, Che
 import SignatureCanvas from "react-signature-canvas";
 import { useSearchParams } from "next/navigation";
 
-export default function CadastroPage() {
+import { Suspense } from "react";
+
+function CadastroContent() {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -734,5 +736,13 @@ export default function CadastroPage() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+export default function CadastroPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0F1722] flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[#F17B37]" /></div>}>
+      <CadastroContent />
+    </Suspense>
   );
 }

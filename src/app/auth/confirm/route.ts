@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/admin'
 
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // 1. Fluxo PKCE (Padrão atual do Supabase para links gerados pelo template deles)
   if (code) {

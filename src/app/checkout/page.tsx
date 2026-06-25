@@ -6,7 +6,9 @@ import { supabase } from "@/lib/supabase";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, KeyRound, CheckCircle2, Loader2, Calendar, ArrowRight, User as UserIcon, ArrowLeft, Save } from "lucide-react";
 
-export default function CheckoutAuthPage() {
+import { Suspense } from "react";
+
+function CheckoutAuthContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const agendaId = searchParams.get('agenda_id');
@@ -320,5 +322,13 @@ export default function CheckoutAuthPage() {
         </AnimatePresence>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutAuthPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0F1722] flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-[#F17B37]" /></div>}>
+      <CheckoutAuthContent />
+    </Suspense>
   );
 }

@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
 
 type AgendaForm = {
   title: string; location: string; date: string; price: string;
@@ -1067,7 +1067,7 @@ export default function AdminPage() {
                                       <RechartsTooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                                       <Bar dataKey="lucro" radius={[4, 4, 4, 4]}>
                                         {monthlyData.map((entry, index) => (
-                                          <cell key={`cell-${index}`} fill={entry.lucro >= 0 ? '#25D366' : '#EF4444'} />
+                                          <Cell key={`cell-${index}`} fill={entry.lucro >= 0 ? '#25D366' : '#EF4444'} />
                                         ))}
                                       </Bar>
                                     </BarChart>

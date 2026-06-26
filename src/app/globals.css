@@ -66,3 +66,14 @@ html, body {
 .dark-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(241, 123, 55, 0.8);
 }
+
+@keyframes rotateOrb {
+  100% { transform: rotateY(360deg) rotateX(360deg); }
+}
+
+@keyframes orbitParticle {
+  20% { opacity: 1; }
+  30% { transform: rotateZ(calc(-1 * var(--z))) rotateY(var(--y)) translateX(var(--orb-size)) rotateZ(var(--z)); }
+  80% { transform: rotateZ(calc(-1 * var(--z))) rotateY(var(--y)) translateX(var(--orb-size)) rotateZ(var(--z)); opacity: 1; }
+  100% { transform: rotateZ(calc(-1 * var(--z))) rotateY(var(--y)) translateX(calc(var(--orb-size) * 3)) rotateZ(var(--z)); opacity: 0; }
+}

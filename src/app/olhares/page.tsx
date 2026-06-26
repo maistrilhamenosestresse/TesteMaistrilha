@@ -5,62 +5,59 @@ import { motion, useScroll, useTransform, useMotionValue, useSpring } from "fram
 import { ArrowLeft, Quote, Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-function SwarmParticle({ mouseX, mouseY, hasMoved }: { mouseX: any, mouseY: any, hasMoved: boolean }) {
-  // Posição aleatória inicial nos cantos da tela
-  const [initialPos] = useState({
-    x: typeof window !== 'undefined' ? Math.random() * window.innerWidth : 500,
-    y: typeof window !== 'undefined' ? Math.random() * window.innerHeight : 500,
-  });
+function OrbSwarm({ mouseX, mouseY, hasMoved }: { mouseX: any, mouseY: any, hasMoved: boolean }) {
+  // A mola super elástica para a esfera seguir o mouse com física natural
+  const springX = useSpring(mouseX, { damping: 25, stiffness: 120 });
+  const springY = useSpring(mouseY, { damping: 25, stiffness: 120 });
 
-  // Física de Mel (Extremamente Lenta e Suave)
-  // O atrito é altíssimo e a atração minúscula. Elas vão demorar muito para chegar no mouse.
-  const springConfig = { 
-    damping: Math.random() * 50 + 40, // 40 a 90 (Muito arrasto, parecem estar na água)
-    stiffness: Math.random() * 3 + 1, // 1 a 4 (Atração quase nula)
-    mass: Math.random() * 4 + 2 // Muito pesadas
-  };
-  
-  const springX = useSpring(hasMoved ? mouseX : initialPos.x, springConfig);
-  const springY = useSpring(hasMoved ? mouseY : initialPos.y, springConfig);
-  
-  // Offset aleatório largo para que formem uma nuvem imensa ao redor do mouse, sem colar nele
-  const [cloudOffset] = useState({ 
-    x: (Math.random() - 0.5) * 500, 
-    y: (Math.random() - 0.5) * 500 
-  });
-
-  const size = Math.random() * 4 + 2;
-
-  const baseX = useTransform(springX, val => val + cloudOffset.x);
-  const baseY = useTransform(springY, val => val + cloudOffset.y);
+  // Só mostra a esfera depois que o usuário move o mouse
+  if (!hasMoved) return null;
 
   return (
     <motion.div
-      className="fixed pointer-events-none z-50"
-      style={{ x: baseX, y: baseY, left: 0, top: 0 }}
+      className="fixed pointer-events-none z-50 flex items-center justify-center"
+      style={{
+        x: springX,
+        y: springY,
+        width: 0,
+        height: 0,
+        left: 0,
+        top: 0,
+        perspective: '1000px', // Perspectiva 3D
+      }}
     >
-      <motion.div
-        className="rounded-full bg-[#F17B37]"
-        style={{
-          width: size,
-          height: size,
-          boxShadow: '0 0 10px 2px #F17B37',
-          left: -size/2,
-          top: -size/2,
-          filter: 'blur(1px)'
+      <div 
+        style={{ 
+          transformStyle: 'preserve-3d', 
+          animation: 'rotateOrb 14s infinite linear' 
         }}
-        // Aqui entra a exata mesma animação flutuante aleatória das partículas de fundo!
-        animate={{
-          x: [0, Math.random() * 200 - 100, 0],
-          y: [0, Math.random() * -200 - 100, 0],
-          opacity: [0, Math.random() * 0.7 + 0.2, 0]
-        }}
-        transition={{
-          duration: Math.random() * 15 + 15, // 15 a 30 segundos! Bem lento e natural.
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      />
+      >
+        {[...Array(150)].map((_, i) => {
+          const z = Math.random() * 360;
+          const y = Math.random() * 360;
+          const delay = i * 0.05; // Delay para não chegarem todas juntas
+          const orbSize = 80; // Tamanho da órbita
+          
+          return (
+            <div
+              key={i}
+              className="absolute rounded-full"
+              style={{
+                width: '3px',
+                height: '3px',
+                backgroundColor: '#F17B37',
+                boxShadow: '0 0 8px 2px #F17B37',
+                opacity: 0,
+                animation: 'orbitParticle 14s infinite',
+                animationDelay: `${delay}s`,
+                '--z': `${z}deg`,
+                '--y': `${y}deg`,
+                '--orb-size': `${orbSize}px`,
+              } as React.CSSProperties}
+            />
+          );
+        })}
+      </div>
     </motion.div>
   );
 }
@@ -125,19 +122,13 @@ export default function OlharesPage() {
   return (
     <div className="bg-[#05080c] text-white min-h-screen overflow-x-hidden font-sans selection:bg-[#F17B37] selection:text-white">
       
-      {/* O ENXAME INTERATIVO: Fagulhas que orbitam o ponteiro com física elástica */}
-      {isClient && (
-        <div className="pointer-events-none">
-          {[...Array(12)].map((_, i) => (
-            <SwarmParticle key={`swarm-${i}`} mouseX={mouseX} mouseY={mouseY} hasMoved={hasMoved} />
-          ))}
-        </div>
-      )}
+      {/* O ENXAME INTERATIVO: A Esfera 3D de Partículas de Fogo */}
+      {isClient && <OrbSwarm mouseX={mouseX} mouseY={mouseY} hasMoved={hasMoved} />}
 
       {/* PARTÍCULAS DE POEIRA CINEMATOGRÁFICAS (FAGULHAS E NÉVOA DE FUNDO) */}
       {isClient && (
         <div className="fixed inset-0 z-20 pointer-events-none overflow-hidden">
-          {[...Array(80)].map((_, i) => {
+          {[...Array(60)].map((_, i) => {
             const size = Math.random() * 3 + 2; // Tamanhos entre 2px e 5px
             const isOrange = i % 4 !== 0; // 75% das partículas serão laranjas!
             return (

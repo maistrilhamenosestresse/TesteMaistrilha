@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { sendPurchaseEmail } from '@/lib/email';
 
 // Usamos o Service Role Key aqui para by-passar o RLS de forma segura, 
 // pois este código roda no servidor e não no cliente.
@@ -82,23 +83,12 @@ export async function POST(request: Request) {
             }
           ]);
 
-          // 4. Disparar o E-mail para Cliente e Administradores
+          // 4. Disparar o E-mail para Cliente e Administradores (CHAMADA DIRETA para evitar timeout na Vercel)
           try {
-            const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'localhost:3000';
-            const protocol = request.headers.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https');
-            let baseUrl = `${protocol}://${host}`;
-            if (baseUrl.includes('localhost') && process.env.NEXT_PUBLIC_BASE_URL && !process.env.NEXT_PUBLIC_BASE_URL.includes('localhost')) {
-              baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-            }
-
-            await fetch(`${baseUrl}/api/send-purchase-email`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ client, agenda })
-            });
+            await sendPurchaseEmail(client, agenda);
             console.log(`[SUCESSO] Email enviado para compra da Reserva ID: ${reserva_id}`);
           } catch (emailErr) {
-            console.error("Erro ao chamar API de email:", emailErr);
+            console.error("Erro ao enviar email de compra:", emailErr);
           }
         }
 

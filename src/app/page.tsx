@@ -46,7 +46,7 @@ export default function LandingPage() {
     <div className="bg-[#0F1722] text-white min-h-screen overflow-x-hidden font-sans selection:bg-[#F17B37] selection:text-white">
 
       {/* NAVEGAÇÃO */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-4 bg-transparent md:bg-gradient-to-b md:from-[#0F1722] md:to-transparent md:backdrop-blur-sm">
+      <nav className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-4 bg-transparent md:bg-gradient-to-b md:from-[#0F1722] md:to-transparent md:backdrop-blur-sm">
         <div className="flex items-center gap-3">
           <img src="/FotosEvideos/logo/55C232D4-8B60-45C4-82BC-4B25960F8B60%20Copy.JPG" alt="Mais Trilha Logo" className="h-20 w-20 rounded-full aspect-square object-cover object-center shadow-[0_0_15px_rgba(241,123,55,0.4)] border-5 border-[#F17B37]/30" />
         </div>
@@ -465,7 +465,14 @@ export default function LandingPage() {
             </div>
             
             {/* DIREITOS AUTORAIS */}
-            <div className="mt-12 text-center text-sm text-gray-500 opacity-60">
+            <div className="mt-12 text-center text-sm text-gray-500 opacity-60 flex flex-col items-center gap-4">
+              <button 
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="w-12 h-12 flex items-center justify-center rounded-full border border-gray-600 hover:border-[#F17B37] hover:text-[#F17B37] transition-all hover:scale-110 group mb-4"
+                title="Voltar ao Topo"
+              >
+                <ChevronDown className="w-6 h-6 rotate-180 group-hover:-translate-y-1 transition-transform" />
+              </button>
               <p>© {new Date().getFullYear()} Todos os direitos reservados a Mais Trilha Menos Estresse.</p>
             </div>
           </motion.div>

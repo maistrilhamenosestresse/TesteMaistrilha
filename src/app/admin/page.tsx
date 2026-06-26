@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid, Cell, LabelList } from 'recharts';
 
 type AgendaForm = {
   title: string; location: string; date: string; price: string;
@@ -302,7 +302,7 @@ export default function AdminPage() {
         setIsFetchingGlobalFinances(true);
         try {
           const [resReservas, resCustos] = await Promise.all([
-            supabase.from('reservas').select('agenda_id, status_pagamento'),
+            supabase.from('reservas').select('agenda_id, status_pagamento, valor_pago, metodo_pagamento, client_id, clients(full_name, phone)'),
             supabase.from('trilha_custos').select('agenda_id, valor_custo')
           ]);
           setAllReservas(resReservas.data || []);
@@ -1084,24 +1084,24 @@ export default function AdminPage() {
                       <div className="space-y-6 print:m-0 print:p-0">
                         
                         {/* Header do Relatório */}
-                        <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-gray-100 print:shadow-none print:border-none">
-                          <h3 className="font-bold text-gray-800 text-lg flex items-center gap-2">
+                        <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-gray-100 print:shadow-none print:border-none flex-col sm:flex-row gap-4">
+                          <h3 className="font-bold text-gray-800 text-lg flex items-center gap-2 w-full sm:w-auto">
                             <DollarSign className="h-6 w-6 text-[#25D366]" /> Dashboard Financeiro
                           </h3>
-                          <div className="flex gap-2 print:hidden">
+                          <div className="flex flex-wrap gap-2 print:hidden justify-start sm:justify-end w-full sm:w-auto">
                             <button 
                               onClick={() => {
                                 const payload = { agendas, allReservas, allCustos, year: reportYear };
                                 handleGenerateCFOAdvice(payload);
                               }}
-                              className="bg-purple-50 text-purple-600 hover:bg-purple-100 p-2 rounded-xl transition flex gap-2 text-sm font-bold"
+                              className="bg-purple-50 text-purple-600 hover:bg-purple-100 p-2 rounded-xl transition flex gap-2 text-sm font-bold flex-1 sm:flex-none justify-center"
                             >
                               <Sparkles className="h-4 w-4" /> IA CFO
                             </button>
-                            <button onClick={() => handleExportCSV('relatorios')} className="bg-blue-50 text-blue-600 hover:bg-blue-100 p-2 rounded-xl transition flex gap-2 text-sm font-bold">
+                            <button onClick={() => handleExportCSV('relatorios')} className="bg-blue-50 text-blue-600 hover:bg-blue-100 p-2 rounded-xl transition flex gap-2 text-sm font-bold flex-1 sm:flex-none justify-center">
                               <FileUp className="h-4 w-4" /> Excel
                             </button>
-                            <button onClick={() => window.print()} className="bg-gray-100 text-gray-700 hover:bg-gray-200 p-2 rounded-xl transition flex gap-2 text-sm font-bold">
+                            <button onClick={() => window.print()} className="bg-gray-100 text-gray-700 hover:bg-gray-200 p-2 rounded-xl transition flex gap-2 text-sm font-bold flex-1 sm:flex-none justify-center">
                               <Printer className="h-4 w-4" /> Imprimir
                             </button>
                           </div>
@@ -1148,7 +1148,7 @@ export default function AdminPage() {
                               <div className="grid grid-cols-2 gap-3">
                                 <div className="bg-gradient-to-br from-[#1D2A3A] to-gray-900 p-5 rounded-2xl shadow-md text-white">
                                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Lucro Anual ({reportYear})</p>
-                                  <p className="text-3xl font-black text-[#25D366]">R$ {yearProfit.toFixed(2)}</p>
+                                  <p className={`text-3xl font-black ${yearProfit >= 0 ? 'text-[#25D366]' : 'text-red-500'}`}>R$ {yearProfit.toFixed(2)}</p>
                                 </div>
                                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
                                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Faturamento Bruto</p>
@@ -1247,6 +1247,22 @@ export default function AdminPage() {
                                                       <p className="font-bold text-gray-800 text-sm">{rev > 0 ? ((profit / rev) * 100).toFixed(1) : '0'}%</p>
                                                     </div>
                                                   </div>
+                                                  {allReservas.filter(r => r.agenda_id === agenda.id && r.status_pagamento === 'pago').length > 0 && (
+                                                    <div className="p-4 pt-0 mt-2 border-t border-gray-100">
+                                                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 mt-3">Passageiros Pagos</p>
+                                                      <div className="space-y-1 max-h-[200px] overflow-y-auto custom-scrollbar pr-1">
+                                                        {allReservas.filter(r => r.agenda_id === agenda.id && r.status_pagamento === 'pago').map(reserva => (
+                                                          <div key={reserva.id} className="flex justify-between items-center text-xs bg-white p-2.5 rounded-lg border border-gray-100 shadow-sm">
+                                                            <span className="font-bold text-gray-800 truncate pr-2">{reserva.clients?.full_name}</span>
+                                                            <div className="flex items-center gap-2 shrink-0">
+                                                              <span className="text-[9px] text-gray-400 bg-gray-50 px-2 py-0.5 rounded border border-gray-100 font-bold uppercase">{reserva.metodo_pagamento || 'Dinheiro'}</span>
+                                                              <span className="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded border border-green-100">R$ {reserva.valor_pago || agenda.price}</span>
+                                                            </div>
+                                                          </div>
+                                                        ))}
+                                                      </div>
+                                                    </div>
+                                                  )}
                                                 </motion.div>
                                               )}
                                             </AnimatePresence>
@@ -1257,6 +1273,51 @@ export default function AdminPage() {
                                   )}
                                 </div>
                               </div>
+
+                              {/* Ranking dos Top Clientes */}
+                              {(() => {
+                                const clientRanking = allReservas.reduce((acc, curr) => {
+                                  if (curr.status_pagamento === 'pago' && curr.clients) {
+                                    if (!acc[curr.client_id]) {
+                                      acc[curr.client_id] = { name: curr.clients.full_name, count: 0 };
+                                    }
+                                    acc[curr.client_id].count += 1;
+                                  }
+                                  return acc;
+                                }, {} as Record<string, { name: string, count: number }>);
+                                
+                                const topClients = Object.values(clientRanking)
+                                  .sort((a: any, b: any) => b.count - a.count)
+                                  .slice(0, 10);
+                                  
+                                if (topClients.length === 0) return null;
+
+                                return (
+                                  <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mt-4 print:hidden">
+                                    <h4 className="font-bold text-gray-800 mb-4 text-sm uppercase tracking-wide flex items-center gap-2">
+                                      <Users className="h-5 w-5 text-[#F17B37]" /> Ranking Top Trilheiros
+                                    </h4>
+                                    <div className="space-y-2">
+                                      {topClients.map((client, index) => (
+                                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                                          <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-[#1D2A3A] text-white flex items-center justify-center text-xs font-black shrink-0 shadow-md">
+                                              #{index + 1}
+                                            </div>
+                                            <div>
+                                              <p className="text-sm font-bold text-gray-900">{client.name}</p>
+                                            </div>
+                                          </div>
+                                          <div className="flex items-center gap-1 bg-orange-100 text-[#F17B37] px-3 py-1 rounded-lg border border-orange-200">
+                                            <span className="text-sm font-black">{client.count}</span>
+                                            <span className="text-[10px] font-bold uppercase">Trilhas</span>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                );
+                              })()}
                             </>
                           );
                         })()}

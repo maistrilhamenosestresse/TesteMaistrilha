@@ -7,6 +7,11 @@ import { useRouter } from "next/navigation";
 
 export default function LandingPage() {
   const router = useRouter();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Parallax Setup
   const { scrollYProgress } = useScroll();
@@ -43,7 +48,7 @@ export default function LandingPage() {
       {/* NAVEGAÇÃO */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-4 bg-transparent md:bg-gradient-to-b md:from-[#0F1722] md:to-transparent md:backdrop-blur-sm">
         <div className="flex items-center gap-3">
-          <img src="/FotosEvideos/logo/55C232D4-8B60-45C4-82BC-4B25960F8B60%20Copy.JPG" alt="Mais Trilha Logo" className="h-20 w-20 rounded-full aspect-square object-cover object-center shadow-[0_0_15px_rgba(241,123,55,0.4)] border-10 border-[#F17B37]/30" />
+          <img src="/FotosEvideos/logo/55C232D4-8B60-45C4-82BC-4B25960F8B60%20Copy.JPG" alt="Mais Trilha Logo" className="h-20 w-20 rounded-full aspect-square object-cover object-center shadow-[0_0_15px_rgba(241,123,55,0.4)] border-5 border-[#F17B37]/30" />
         </div>
         <div className="flex items-center gap-4">
           <button
@@ -247,41 +252,43 @@ export default function LandingPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-black via-black/80 to-black" />
         </motion.div>
 
-        {/* PARTÍCULAS DO FUNDO - RESTRITAS A ESSE CONTAINER */}
-        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-          {[...Array(50)].map((_, i) => {
-            const size = Math.random() * 3 + 2;
-            const isOrange = i % 3 === 0;
-            return (
-              <motion.div
-                key={i}
-                className="absolute rounded-full"
-                style={{
-                  width: size,
-                  height: size,
-                  backgroundColor: isOrange ? '#F17B37' : '#ffffff',
-                  boxShadow: isOrange ? '0 0 10px #F17B37' : '0 0 5px #ffffff',
-                  filter: 'blur(1px)'
-                }}
-                initial={{
-                  x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1000),
-                  y: Math.random() * 800,
-                  opacity: 0,
-                }}
-                animate={{
-                  y: [null, Math.random() * -300 - 100],
-                  x: [null, Math.random() * 200 - 100],
-                  opacity: [0, Math.random() * 0.8 + 0.2, 0],
-                }}
-                transition={{
-                  duration: Math.random() * 15 + 10,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-            );
-          })}
-        </div>
+        {/* PARTÍCULAS DO FUNDO - RESTRITAS A ESSE CONTAINER - SOMENTE NO CLIENTE PARA EVITAR ERRO DE HYDRATION */}
+        {isClient && (
+          <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+            {[...Array(50)].map((_, i) => {
+              const size = Math.random() * 3 + 2;
+              const isOrange = i % 3 === 0;
+              return (
+                <motion.div
+                  key={i}
+                  className="absolute rounded-full"
+                  style={{
+                    width: size,
+                    height: size,
+                    backgroundColor: isOrange ? '#F17B37' : '#ffffff',
+                    boxShadow: isOrange ? '0 0 10px #F17B37' : '0 0 5px #ffffff',
+                    filter: 'blur(1px)'
+                  }}
+                  initial={{
+                    x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1000),
+                    y: Math.random() * 800,
+                    opacity: 0,
+                  }}
+                  animate={{
+                    y: [null, Math.random() * -300 - 100],
+                    x: [null, Math.random() * 200 - 100],
+                    opacity: [0, Math.random() * 0.8 + 0.2, 0],
+                  }}
+                  transition={{
+                    duration: Math.random() * 15 + 10,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                />
+              );
+            })}
+          </div>
+        )}
 
         <div className="relative z-10 text-center max-w-5xl px-6">
           <motion.div
@@ -299,7 +306,8 @@ export default function LandingPage() {
             </p>
 
             <div className="relative inline-block">
-                {/* Partículas destacando o botão */}
+              {/* Partículas destacando o botão - APENAS NO CLIENTE */}
+              {isClient && (
                 <div className="absolute -inset-10 pointer-events-none z-0">
                   {[...Array(8)].map((_, i) => (
                     <motion.div
@@ -329,16 +337,17 @@ export default function LandingPage() {
                     />
                   ))}
                 </div>
+              )}
 
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => router.push('/olhares')}
-                  className="relative z-10 inline-flex items-center gap-3 bg-transparent border-2 border-white/20 hover:border-[#F17B37] hover:bg-[#F17B37]/10 text-white px-8 py-4 rounded-full font-medium text-lg transition-all"
-                >
-                  Dedique um momento a eles <ArrowRight className="h-5 w-5" />
-                </motion.button>
-              </div>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => router.push('/olhares')}
+                className="relative z-10 inline-flex items-center gap-3 bg-transparent border-2 border-white/20 hover:border-[#F17B37] hover:bg-[#F17B37]/10 text-white px-8 py-4 rounded-full font-medium text-lg transition-all"
+              >
+                Dedique um momento a eles <ArrowRight className="h-5 w-5" />
+              </motion.button>
+            </div>
           </motion.div>
         </div>
       </section>
@@ -346,7 +355,7 @@ export default function LandingPage() {
       {/* 4. GALERIA COMUNIDADE E PESSOAS ESPECIAIS (MASONRY REAL) */}
       <section className="py-32 px-6 bg-[#0F1722] relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-white/5 to-[#0F1722] z-0" />
-        
+
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-20">
             <h2 className="text-5xl font-black mb-4 drop-shadow-xl">Nossa Comunidade</h2>

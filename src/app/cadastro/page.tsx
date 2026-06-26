@@ -178,19 +178,26 @@ function CadastroContent() {
         savedClient = insertedData[0];
       }
 
-      // 3. Criar Reserva se existir agendaId
-      let reservaId = null;
-      if (agendaId && savedClient) {
-        const { data: reservaData, error: reservaError } = await supabase.from('reservas').insert([{
-          client_id: savedClient.id,
-          agenda_id: agendaId,
-          status_pagamento: 'pendente',
-          valor_pago: 0
-        }]).select();
-        
-        if (reservaError) throw reservaError;
-        reservaId = reservaData[0].id;
-      }
+        // 3. Criar Reserva se existir agendaId
+        let reservaId = null;
+        if (agendaId && savedClient) {
+          const resReserva = await fetch('/api/create-reserva', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              client_id: savedClient.id,
+              agenda_id: agendaId
+            })
+          });
+          
+          if (!resReserva.ok) {
+            const errData = await resReserva.json();
+            throw new Error(errData.error || 'Erro ao criar reserva');
+          }
+          
+          const reservaJson = await resReserva.json();
+          reservaId = reservaJson.reserva.id;
+        }
 
       // 4. Send Email Notification
       await fetch('/api/send-email', {

@@ -143,16 +143,23 @@ function CheckoutAuthContent() {
   const handleCheckout = async () => {
     setIsLoading(true);
     try {
-      // 1. Cria a reserva pendente
-      const { data: reservaData, error: reservaError } = await supabase.from('reservas').insert([{
-        client_id: clientData.id,
-        agenda_id: agendaId,
-        status_pagamento: 'pendente',
-        valor_pago: 0
-      }]).select();
+      // 1. Cria a reserva pendente (via API para evitar erro de RLS)
+      const resReserva = await fetch('/api/create-reserva', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: clientData.id,
+          agenda_id: agendaId
+        })
+      });
       
-      if (reservaError) throw reservaError;
-      const reservaId = reservaData[0].id;
+      if (!resReserva.ok) {
+        const errData = await resReserva.json();
+        throw new Error(errData.error || 'Erro ao criar reserva');
+      }
+      
+      const reservaJson = await resReserva.json();
+      const reservaId = reservaJson.reserva.id;
 
       // 2. Chama a API da InfinitePay
       const reqCheckout = await fetch('/api/checkout', {

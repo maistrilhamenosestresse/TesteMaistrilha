@@ -89,90 +89,115 @@ export default function LandingPage() {
       </motion.section>
 
       {/* 2. A HISTÓRIA (NÍVEA E AS FUNDADORAS) */}
-      <section className="py-24 md:py-40 px-6 relative z-20 bg-[#0F1722]">
-        <div className="max-w-4xl mx-auto">
+      <section className="py-24 md:py-40 px-6 relative z-20 bg-[#0F1722] overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#F17B37]/5 via-[#0F1722]/80 to-[#0F1722] z-0" />
+        
+        <div className="max-w-5xl mx-auto relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8 }}
-            className="mb-20 text-center"
+            transition={{ duration: 1, ease: "easeOut" }}
+            className="mb-24 text-center"
           >
-            <h2 className="text-[#F17B37] font-bold tracking-widest uppercase text-sm mb-4">A Nossa História</h2>
-            <h3 className="text-4xl md:text-5xl font-black">Como tudo começou</h3>
+            <h2 className="text-[#F17B37] font-bold tracking-[0.3em] uppercase text-xs mb-6">A Nossa Essência</h2>
+            <h3 className="text-5xl md:text-7xl font-black tracking-tight text-white drop-shadow-2xl">Como tudo começou</h3>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-16 items-center mb-32">
+          {/* Intro Nivea */}
+          <div className="flex flex-col md:flex-row gap-16 items-center mb-32">
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="prose prose-invert prose-lg"
+              transition={{ duration: 1, delay: 0.2 }}
+              className="flex-1 space-y-6"
             >
-              <p className="text-xl leading-relaxed text-gray-300 font-light">
-                Me chamo <strong className="text-white">Nívea Magalhães</strong>... tenho 35 anos... e há 3 anos venho me aventurando e me desafiando no mundo do ecoturismo.
+              <p className="text-2xl leading-relaxed text-gray-300 font-light">
+                Me chamo <strong className="text-white font-medium">Nívea Magalhães</strong>... tenho 35 anos... e há 3 anos venho me aventurando e me desafiando no mundo do ecoturismo.
               </p>
-              <p className="text-xl leading-relaxed text-gray-300 font-light mt-6">
-                Sempre tive uma conexão muito forte com a natureza. Gosto do simples, do essencial. E é em meio a ela que eu me sinto verdadeiramente acolhida. Na minha família, o hábito de acampar e caminhar ao ar livre sempre esteve presente, mas foi o meu tio quem despertou em mim algo maior.
+              <p className="text-xl leading-relaxed text-gray-400 font-light">
+                Sempre tive uma conexão muito forte com a natureza. Gosto do simples, do essencial. Na minha família, o hábito de acampar sempre esteve presente, mas foi o meu tio quem despertou em mim algo maior. Aquele universo me encantava.
               </p>
             </motion.div>
             
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, rotate: 2 }}
-              whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+              initial={{ opacity: 0, scale: 0.9, rotate: 3 }}
+              whileInView={{ opacity: 1, scale: 1, rotate: -2 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="relative aspect-[4/5] rounded-3xl overflow-hidden shadow-2xl group"
+              transition={{ duration: 1.2, type: "spring" }}
+              whileHover={{ scale: 1.05, rotate: 0 }}
+              className="flex-1 relative aspect-[4/5] rounded-[2rem] overflow-hidden shadow-[0_0_50px_rgba(241,123,55,0.15)] ring-1 ring-white/10 group"
             >
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10" />
-              <img src="/FotosEvideos/Nivea/IMG_3414.webp" alt="Nívea Magalhães" className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" />
-              <div className="absolute bottom-6 left-6 z-20">
-                <p className="font-bold text-lg">Nívea Magalhães</p>
-                <p className="text-[#F17B37] text-sm font-bold uppercase tracking-widest">Fundadora</p>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
+              <img src="/FotosEvideos/Nivea/IMG_3414.webp" alt="Nívea Magalhães" className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-1000 ease-out" />
+              <div className="absolute bottom-8 left-8 z-20">
+                <p className="font-black text-3xl text-white drop-shadow-lg">Nívea</p>
+                <p className="text-[#F17B37] text-sm font-bold uppercase tracking-widest mt-1">A Fundadora</p>
               </div>
             </motion.div>
           </div>
 
+          {/* O Despertar (Bandeira) */}
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="text-center max-w-3xl mx-auto mb-32"
+            transition={{ duration: 1 }}
+            className="text-center max-w-4xl mx-auto mb-32 relative"
           >
-            <p className="text-2xl md:text-3xl font-medium leading-relaxed italic text-gray-200">
-              "Mesmo com esse sonho dentro de mim... por muito tempo eu acreditei que aquilo não era pra mim. Que não era para uma mulher... casada... mãe... aos 32 anos."
+            <div className="absolute -inset-10 bg-gradient-to-r from-transparent via-[#F17B37]/10 to-transparent blur-3xl z-0" />
+            <p className="text-3xl md:text-4xl font-light leading-relaxed italic text-gray-100 relative z-10 drop-shadow-xl">
+              "Mesmo com esse sonho dentro de mim... por muito tempo acreditei que aquilo não era pra mim. Que não era para uma mulher... casada... mãe... aos 32 anos."
             </p>
+
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1, delay: 0.3 }}
+              className="mt-16 relative aspect-video md:aspect-[21/9] rounded-[2rem] overflow-hidden shadow-2xl ring-1 ring-white/10 group"
+            >
+               <img src="/FotosEvideos/Nivea/WhatsApp%20Image%202026-06-26%20at%2010.27.44.jpeg" alt="Nívea com a Bandeira" className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-1000" />
+               <div className="absolute inset-0 bg-black/30 group-hover:bg-transparent transition-colors duration-700" />
+            </motion.div>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-16 items-center flex-col-reverse md:flex-row-reverse">
+          {/* As Fundadoras */}
+          <div className="flex flex-col md:flex-row-reverse gap-16 items-center">
             <motion.div
               initial={{ opacity: 0, x: 50 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="prose prose-invert prose-lg"
+              transition={{ duration: 1, delay: 0.2 }}
+              className="flex-1 space-y-6"
             >
-              <p className="text-xl leading-relaxed text-gray-300 font-light">
-                Até que decidi convidar meu tio para refazer uma trilha muito especial: a Cachoeira do Tabuleiro. Ele não pôde ir, então decidi ir sozinha. Ou pelo menos, essa era a ideia.
+              <p className="text-2xl leading-relaxed text-gray-300 font-light">
+                Decidi convidar meu tio para refazer uma trilha muito especial: a Cachoeira do Tabuleiro. Ele não pôde ir, então decidi ir sozinha. Ou pelo menos, essa era a ideia.
               </p>
-              <p className="text-xl leading-relaxed text-gray-300 font-light mt-6">
-                Contei para uma amiga, que chamou outra, e quando percebi minha mãe também estava dentro. Lá estávamos nós: <strong className="text-white">cinco mulheres</strong> de madrugada, dentro de um carro, prontas para viver algo que mudaria tudo.
+              <p className="text-xl leading-relaxed text-gray-400 font-light">
+                Contei para uma amiga, que chamou outra, e de repente minha mãe também estava dentro. Lá estávamos nós: <strong className="text-white font-medium">cinco mulheres</strong> de madrugada, dentro de um carro, prontas para viver algo que mudaria tudo.
               </p>
-              <p className="text-xl leading-relaxed text-[#F17B37] font-medium mt-6">
-                Enfrentamos frio, perrengues com o carro, mas nada impediu de ser uma das maiores experiências das nossas vidas. Foi ali que descobri uma coragem que nem sabia que existia em mim.
+              <p className="text-xl leading-relaxed text-[#F17B37] font-medium drop-shadow-md">
+                Enfrentamos frio, perrengues, mas nada impediu de ser uma das maiores experiências das nossas vidas. Foi ali que descobri uma coragem que nem sabia que existia em mim.
               </p>
             </motion.div>
             
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, rotate: -2 }}
-              whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+              initial={{ opacity: 0, scale: 0.9, rotate: -3 }}
+              whileInView={{ opacity: 1, scale: 1, rotate: 2 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="relative aspect-[4/3] md:aspect-square rounded-3xl overflow-hidden shadow-2xl group"
+              transition={{ duration: 1.2, type: "spring" }}
+              whileHover={{ scale: 1.05, rotate: 0 }}
+              className="flex-1 relative aspect-[4/5] md:aspect-[3/4] rounded-[2rem] overflow-hidden shadow-[0_0_50px_rgba(255,255,255,0.05)] ring-1 ring-white/10 group"
             >
-              <img src="/FotosEvideos/IMG_6144.webp" alt="As Fundadoras" className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
+              {/* O usuário mencionou que a pasta "Fundadoras" estava sendo usada mas as fotos não apareciam. 
+                  Como a pasta estava vazia, estou usando uma foto de grupo como representação das fundadoras, que pode ser alterada. */}
+              <img src="/FotosEvideos/Nivea/WhatsApp%20Image%202026-06-26%20at%2010.39.37%20(2).jpeg" alt="O Primeiro Encontro (Fundadoras)" className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-1000 ease-out" />
+              <div className="absolute bottom-8 left-8 z-20">
+                <p className="font-black text-3xl text-white drop-shadow-lg">A Origem</p>
+                <p className="text-gray-300 text-sm font-bold uppercase tracking-widest mt-1">O Primeiro Grupo</p>
+              </div>
             </motion.div>
           </div>
         </div>
@@ -212,17 +237,19 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <motion.div className="col-span-2 row-span-2 relative aspect-square rounded-2xl overflow-hidden" whileHover={{ scale: 0.98 }}>
-              <img src="/FotosEvideos/IMG_6334.webp" className="w-full h-full object-cover" alt="Grupo" />
+            <motion.div className="col-span-2 row-span-2 relative aspect-square rounded-[2rem] overflow-hidden shadow-2xl" whileHover={{ scale: 0.98 }} transition={{ duration: 0.4 }}>
+              <img src="/FotosEvideos/Grupo/IMG_9329.JPG" className="w-full h-full object-cover" alt="Nossa Comunidade 1" />
+              <div className="absolute inset-0 bg-black/10 hover:bg-transparent transition-colors duration-500" />
             </motion.div>
-            <motion.div className="relative aspect-square rounded-2xl overflow-hidden" whileHover={{ scale: 0.98 }}>
-              <img src="/FotosEvideos/IMG_1772.webp" className="w-full h-full object-cover" alt="Paisagem" />
+            <motion.div className="relative aspect-square rounded-3xl overflow-hidden shadow-xl" whileHover={{ scale: 0.95 }} transition={{ duration: 0.4 }}>
+              <img src="/FotosEvideos/Grupo/IMG_9347.JPG" className="w-full h-full object-cover" alt="Nossa Comunidade 2" />
             </motion.div>
-            <motion.div className="relative aspect-square rounded-2xl overflow-hidden" whileHover={{ scale: 0.98 }}>
-              <img src="/FotosEvideos/IMG_5732.webp" className="w-full h-full object-cover" alt="Pessoas" />
+            <motion.div className="relative aspect-square rounded-3xl overflow-hidden shadow-xl" whileHover={{ scale: 0.95 }} transition={{ duration: 0.4 }}>
+              <img src="/FotosEvideos/Grupo/IMG_9411.JPG" className="w-full h-full object-cover" alt="Nossa Comunidade 3" />
             </motion.div>
-            <motion.div className="col-span-2 relative aspect-[2/1] rounded-2xl overflow-hidden" whileHover={{ scale: 0.98 }}>
-              <img src="/FotosEvideos/IMG_6352.webp" className="w-full h-full object-cover" alt="Grupo" />
+            <motion.div className="col-span-2 relative aspect-[2/1] rounded-[2rem] overflow-hidden shadow-2xl" whileHover={{ scale: 0.98 }} transition={{ duration: 0.4 }}>
+              <img src="/FotosEvideos/Grupo/IMG_9429.JPG" className="w-full h-full object-cover" alt="Nossa Comunidade 4" />
+              <div className="absolute inset-0 bg-black/10 hover:bg-transparent transition-colors duration-500" />
             </motion.div>
           </div>
         </div>

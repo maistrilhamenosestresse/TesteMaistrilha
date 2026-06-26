@@ -10,46 +10,97 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: true, message: 'Nenhum cliente cadastrado' });
     }
 
-    // 2. Verifica aniversários dos próximos 3 dias
     const today = new Date();
-    const upcomingBirthdays = clients.filter(client => {
-      if (!client.birth_date) return false;
-      const bDate = new Date(client.birth_date);
+    today.setHours(0, 0, 0, 0);
+
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.maistrilhasmenosestresse.com';
+    let emailsSentToClients = 0;
+    let notificationsCreated = 0;
+    const upcomingBirthdays = [];
+
+    for (const client of clients) {
+      if (!client.birth_date) continue;
       
-      // Mapeia o aniversário para o ano atual
+      const bDate = new Date(client.birth_date);
       bDate.setFullYear(today.getFullYear());
       
-      // Se o aniversário já passou este ano, mapeia para o ano que vem
       if (bDate < new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1)) {
         bDate.setFullYear(today.getFullYear() + 1);
       }
       
-      const diffTime = Math.abs(bDate.getTime() - today.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      const diffTime = bDate.getTime() - today.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
       
-      return diffDays <= 3 && diffDays >= 0; // Se é hoje, amanhã ou depois de amanhã
-    });
+      if (diffDays <= 3 && diffDays >= 0) {
+        upcomingBirthdays.push(client);
+      }
 
-    if (upcomingBirthdays.length === 0) {
-      return NextResponse.json({ success: true, message: 'Nenhum aniversário próximo' });
+      // Se o aniversário for HOJE, manda email de parabéns direto pro cliente
+      if (diffDays === 0 && client.email) {
+        const clientHtml = `
+          <div style="font-family: sans-serif; max-w: 600px; margin: 0 auto; border-radius: 15px; overflow: hidden; border: 1px solid #eee; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            <div style="background: linear-gradient(135deg, #F17B37, #d96220); padding: 30px; text-align: center;">
+              <h1 style="color: white; margin: 0; font-size: 28px;">Feliz Aniversário, ${client.full_name.split(' ')[0]}! 🎁</h1>
+            </div>
+            <div style="padding: 30px; background-color: #ffffff; text-align: center;">
+              <p style="font-size: 18px; color: #444; line-height: 1.6;">
+                Hoje é um dia muito especial! A equipe da <strong>Mais Trilha Menos Estresse</strong> deseja que sua vida seja uma jornada repleta de saúde, paz, alegria e paisagens inesquecíveis!
+              </p>
+              <p style="font-size: 16px; color: #666; margin-top: 20px;">
+                Que o seu novo ano traga muitas aventuras e momentos incríveis. Esperamos você em nossa próxima trilha para comemorarmos juntos! 🥾⛰️
+              </p>
+              <div style="margin-top: 30px;">
+                <a href="https://wa.me/5531989025078" style="background-color: #25D366; color: white; text-decoration: none; padding: 12px 25px; border-radius: 30px; font-weight: bold; font-size: 16px; display: inline-block;">Falar com a Nívea</a>
+              </div>
+            </div>
+            <div style="background-color: #f8f9fa; padding: 15px; text-align: center; color: #999; font-size: 12px;">
+              Enviado com carinho por Mais Trilha Menos Estresse.
+            </div>
+          </div>
+        `;
+        
+        await fetch(`${baseUrl}/api/send-email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: client.email,
+            subject: `🎉 Feliz Aniversário, ${client.full_name.split(' ')[0]}! - Mais Trilha Menos Estresse`,
+            html: clientHtml
+          })
+        }).catch(e => console.error("Erro ao enviar email de parabéns", e));
+        emailsSentToClients++;
+      }
+
+      // Se o aniversário for AMANHÃ, registra notificação no painel admin
+      if (diffDays === 1) {
+        const { error: supErr } = await supabase.from('notificacoes').insert({
+          tipo: 'aniversario',
+          titulo: `Aviso de Aniversário 🎁`,
+          mensagem: `${client.full_name} faz aniversário amanhã! Prepare os parabéns.`,
+          lida: false
+        });
+        if (supErr) console.error("Erro ao registrar notificacao de aniversario", supErr);
+        notificationsCreated++;
+      }
     }
 
-    // 3. Dispara o E-mail de Aviso passando a lista de aniversariantes
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    const emailRes = await fetch(`${baseUrl}/api/send-email`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: 'birthday_reminder',
-        clients: upcomingBirthdays
-      })
-    });
-
-    if (!emailRes.ok) {
-      throw new Error('Falha ao acionar a API de e-mail');
+    if (upcomingBirthdays.length > 0) {
+      await fetch(`${baseUrl}/api/send-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'birthday_reminder',
+          clients: upcomingBirthdays
+        })
+      });
     }
 
-    return NextResponse.json({ success: true, notified: upcomingBirthdays.length });
+    return NextResponse.json({ 
+      success: true, 
+      notified: upcomingBirthdays.length,
+      emailsSentToClients,
+      notificationsCreated
+    });
     
   } catch (error: any) {
     console.error('Erro no Cron Job de Aniversários:', error);

@@ -1298,7 +1298,7 @@ export default function AdminPage() {
                                       <Users className="h-5 w-5 text-[#F17B37]" /> Ranking Top Trilheiros
                                     </h4>
                                     <div className="space-y-2">
-                                      {topClients.map((client, index) => (
+                                      {topClients.map((client: any, index: number) => (
                                         <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
                                           <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 rounded-full bg-[#1D2A3A] text-white flex items-center justify-center text-xs font-black shrink-0 shadow-md">

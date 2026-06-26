@@ -3,15 +3,24 @@ import { createClient } from '@supabase/supabase-js';
 import { sendPurchaseEmail } from '@/lib/email';
 
 // Usamos o Service Role Key aqui para by-passar o RLS de forma segura, 
-// pois este código roda no servidor e não no cliente.
+// pois este código roda no servidor e não no cliente. Se não existir na Vercel, cai para a ANON_KEY.
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // ESSA CHAVE DEVE SER CRIADA NO .env.local
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 export async function POST(request: Request) {
   try {
     const data = await request.json();
+
+    // Tentar salvar o webhook bruto para debug visual no painel
+    try {
+      await supabase.from('notificacoes').insert([{
+        reserva_id: null,
+        mensagem: `[LOG WEBHOOK RECEBIDO] ${JSON.stringify(data).substring(0, 300)}`,
+        lida: false
+      }]);
+    } catch (e) {}
 
     // Dados enviados pelo Webhook da InfinitePay (podem vir dentro de payload, data, ou direto na raiz)
     const payloadInfo = data.payload || data.data || data;
@@ -31,22 +40,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, message: 'Evento ignorado' }, { status: 200 });
     }
 
-    if (!order_nsu) {
+    // A InfinitePay pode enviar o metadata com o ID da reserva
+    const fallback_nsu = data.metadata?.order_nsu || data.metadata?.reserva_id || payloadInfo.metadata?.order_nsu || payloadInfo.metadata?.reserva_id;
+    const final_order_nsu = order_nsu || fallback_nsu;
+
+    if (!final_order_nsu) {
       console.error('Webhook Inválido. Payload recebido:', JSON.stringify(data));
-      // Tentar salvar a falha na tabela de notificações para debug visual no painel
-      try {
-        await supabase.from('notificacoes').insert([{
-          reserva_id: null,
-          mensagem: `[ERRO WEBHOOK] Payload inesperado recebido. Confira os logs. Conteúdo: ${JSON.stringify(data).substring(0, 150)}`,
-          lida: false
-        }]);
-      } catch (e) {}
-      
-      return NextResponse.json({ success: false, message: 'Pedido não encontrado' }, { status: 400 });
+      return NextResponse.json({ success: false, message: 'Pedido não encontrado no Payload' }, { status: 400 });
     }
 
-    // O order_nsu será o ID da reserva
-    const reserva_id = order_nsu;
+    // O final_order_nsu será o ID da reserva
+    const reserva_id = final_order_nsu;
 
     if (reserva_id) {
       // 1. Atualizar a Tabela de Reservas no Supabase marcando como Pago
@@ -89,6 +93,16 @@ export async function POST(request: Request) {
             console.log(`[SUCESSO] Email enviado para compra da Reserva ID: ${reserva_id}`);
           } catch (emailErr) {
             console.error("Erro ao enviar email de compra:", emailErr);
+            // Salvar aviso que o email falhou
+            try {
+              await supabase.from('notificacoes').insert([
+                {
+                  reserva_id: reserva_id,
+                  mensagem: `[ERRO] Venda APROVADA, mas o E-MAIL falhou para ${client.full_name}. Verifique a senha do Gmail.`,
+                  lida: false
+                }
+              ]);
+            } catch (e) {}
           }
         }
 

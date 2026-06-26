@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     }
 
     // A API do InfinitePay espera o handle sem o $
-    const infiniteTag = "wellington_oiiveira";
+    const infiniteTag = "nivea-maria-7en";
     
     // O order_nsu será exatamente o ID da reserva
     const order_nsu = reserva_id;

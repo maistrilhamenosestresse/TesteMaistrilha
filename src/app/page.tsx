@@ -43,7 +43,7 @@ export default function LandingPage() {
           playsInline
           className="absolute top-0 left-0 w-full h-full object-cover z-0 opacity-60 mix-blend-overlay"
         >
-          <source src="/FotosEvideos/IMG_6161.MP4" type="video/mp4" />
+          <source src="/FotosEvideos/IMG_9319.MP4" type="video/mp4" />
         </video>
         
         <div className="absolute inset-0 bg-gradient-to-b from-[#0F1722]/40 via-transparent to-[#0F1722] z-10" />
@@ -172,7 +172,7 @@ export default function LandingPage() {
               transition={{ duration: 0.8 }}
               className="relative aspect-[4/3] md:aspect-square rounded-3xl overflow-hidden shadow-2xl group"
             >
-              <img src="/FotosEvideos/AS FUNDADORAS/IMG_6144.webp" alt="As Fundadoras" className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" />
+              <img src="/FotosEvideos/IMG_6144.webp" alt="As Fundadoras" className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" />
             </motion.div>
           </div>
         </div>
@@ -181,7 +181,7 @@ export default function LandingPage() {
       {/* 3. SEÇÃO "OLHARES" (CINEMATOGRÁFICO) */}
       <section className="py-32 relative bg-black overflow-hidden flex flex-col items-center justify-center min-h-[80vh]">
         <div className="absolute inset-0 opacity-40">
-          <img src="/FotosEvideos/OLHARES/IMG_6341.webp" alt="Background Olhares" className="w-full h-full object-cover blur-sm" />
+          <img src="/FotosEvideos/IMG_6341.webp" alt="Background Olhares" className="w-full h-full object-cover blur-sm" />
           <div className="absolute inset-0 bg-black/80" />
         </div>
 
@@ -213,16 +213,16 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <motion.div className="col-span-2 row-span-2 relative aspect-square rounded-2xl overflow-hidden" whileHover={{ scale: 0.98 }}>
-              <img src="/FotosEvideos/Grupo/IMG_6334.webp" className="w-full h-full object-cover" alt="Grupo" />
+              <img src="/FotosEvideos/IMG_6334.webp" className="w-full h-full object-cover" alt="Grupo" />
             </motion.div>
             <motion.div className="relative aspect-square rounded-2xl overflow-hidden" whileHover={{ scale: 0.98 }}>
-              <img src="/FotosEvideos/paisagem/IMG_1772.webp" className="w-full h-full object-cover" alt="Paisagem" />
+              <img src="/FotosEvideos/IMG_1772.webp" className="w-full h-full object-cover" alt="Paisagem" />
             </motion.div>
             <motion.div className="relative aspect-square rounded-2xl overflow-hidden" whileHover={{ scale: 0.98 }}>
-              <img src="/FotosEvideos/PESSOAS ESPECIAIS/IMG_5732.webp" className="w-full h-full object-cover" alt="Pessoas" />
+              <img src="/FotosEvideos/IMG_5732.webp" className="w-full h-full object-cover" alt="Pessoas" />
             </motion.div>
             <motion.div className="col-span-2 relative aspect-[2/1] rounded-2xl overflow-hidden" whileHover={{ scale: 0.98 }}>
-              <img src="/FotosEvideos/Grupo/IMG_6352.webp" className="w-full h-full object-cover" alt="Grupo" />
+              <img src="/FotosEvideos/IMG_6352.webp" className="w-full h-full object-cover" alt="Grupo" />
             </motion.div>
           </div>
         </div>

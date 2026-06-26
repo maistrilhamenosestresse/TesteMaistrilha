@@ -53,23 +53,23 @@ function CanvasTrail() {
       
       constructor(x: number, y: number, isWave: boolean, wavePhase: number) {
         this.x = x; this.y = y;
-        this.maxLife = isWave ? Math.random() * 40 + 20 : Math.random() * 20 + 10;
+        this.maxLife = isWave ? Math.random() * 40 + 20 : Math.random() * 30 + 20; // Dispersão dura um pouco mais agora
         this.life = this.maxLife;
         this.size = Math.random() * 3 + 1.5;
         this.color = Math.random() > 0.25 ? '#F17B37' : '#FFFFFF';
         
         if (isWave) {
-          // Forma de onda: Cria um rastro senoidal natural ao mover
+          // Forma de onda
           const dx = mouse.x - lastMouse.x;
           const dy = mouse.y - lastMouse.y;
-          const angle = Math.atan2(dy, dx) + Math.PI / 2; // Perpendicular ao movimento
-          const amplitude = Math.random() * 3 + 1; // Largura da onda
+          const angle = Math.atan2(dy, dx) + Math.PI / 2; 
+          const amplitude = Math.random() * 3 + 1; 
           this.vx = Math.cos(angle) * Math.sin(wavePhase) * amplitude + (dx * 0.05);
           this.vy = Math.sin(angle) * Math.sin(wavePhase) * amplitude + (dy * 0.05);
         } else {
-          // Dispersão: Explode suavemente em direções aleatórias quando para
+          // Dispersão: Explode muito mais suave e lento agora
           const angle = Math.random() * Math.PI * 2;
-          const speed = Math.random() * 4 + 1;
+          const speed = Math.random() * 1.5 + 0.5; // Era de 1 a 5, agora é de 0.5 a 2
           this.vx = Math.cos(angle) * speed;
           this.vy = Math.sin(angle) * speed;
         }
@@ -79,16 +79,17 @@ function CanvasTrail() {
         this.x += this.vx;
         this.y += this.vy;
         this.life--;
-        // Fricção natural do ar
-        this.vx *= 0.92;
-        this.vy *= 0.92;
+        // Fricção natural do ar (mais suave)
+        this.vx *= 0.95;
+        this.vy *= 0.95;
       }
 
       draw(ctx: CanvasRenderingContext2D) {
-        const opacity = Math.max(0, this.life / this.maxLife);
+        // Opacidade reduzida pela metade (0.5) para ficar mais sutil e não tão forte
+        const opacity = Math.max(0, this.life / this.maxLife) * 0.4;
         ctx.globalAlpha = opacity;
         ctx.fillStyle = this.color;
-        ctx.shadowBlur = 12;
+        ctx.shadowBlur = 10; // Brilho levemente mais suave também
         ctx.shadowColor = this.color;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);

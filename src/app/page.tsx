@@ -41,9 +41,9 @@ export default function LandingPage() {
     <div className="bg-[#0F1722] text-white min-h-screen overflow-x-hidden font-sans selection:bg-[#F17B37] selection:text-white">
 
       {/* NAVEGAÇÃO */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-4 bg-gradient-to-b from-[#0F1722] to-transparent backdrop-blur-sm">
+      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-4 bg-transparent md:bg-gradient-to-b md:from-[#0F1722] md:to-transparent md:backdrop-blur-sm">
         <div className="flex items-center gap-3">
-          <img src="/FotosEvideos/logo/55C232D4-8B60-45C4-82BC-4B25960F8B60%20Copy.JPG" alt="Mais Trilha Logo" className="h-20 w-20 rounded-full aspect-square object-cover object-center shadow-[0_0_15px_rgba(241,123,55,0.4)] border-50 border-[#F17B37]/30" />
+          <img src="/FotosEvideos/logo/55C232D4-8B60-45C4-82BC-4B25960F8B60%20Copy.JPG" alt="Mais Trilha Logo" className="h-20 w-20 rounded-full aspect-square object-cover object-center shadow-[0_0_15px_rgba(241,123,55,0.4)] border-10 border-[#F17B37]/30" />
         </div>
         <div className="flex items-center gap-4">
           <button
@@ -247,6 +247,42 @@ export default function LandingPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-black via-black/80 to-black" />
         </motion.div>
 
+        {/* PARTÍCULAS DO FUNDO - RESTRITAS A ESSE CONTAINER */}
+        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+          {[...Array(50)].map((_, i) => {
+            const size = Math.random() * 3 + 2;
+            const isOrange = i % 3 === 0;
+            return (
+              <motion.div
+                key={i}
+                className="absolute rounded-full"
+                style={{
+                  width: size,
+                  height: size,
+                  backgroundColor: isOrange ? '#F17B37' : '#ffffff',
+                  boxShadow: isOrange ? '0 0 10px #F17B37' : '0 0 5px #ffffff',
+                  filter: 'blur(1px)'
+                }}
+                initial={{
+                  x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1000),
+                  y: Math.random() * 800,
+                  opacity: 0,
+                }}
+                animate={{
+                  y: [null, Math.random() * -300 - 100],
+                  x: [null, Math.random() * 200 - 100],
+                  opacity: [0, Math.random() * 0.8 + 0.2, 0],
+                }}
+                transition={{
+                  duration: Math.random() * 15 + 10,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              />
+            );
+          })}
+        </div>
+
         <div className="relative z-10 text-center max-w-5xl px-6">
           <motion.div
             initial={{ opacity: 0, scale: 0.9, filter: "blur(10px)" }}
@@ -262,14 +298,47 @@ export default function LandingPage() {
               "Esta é uma dedicação silenciosa e profunda àqueles que fazem o grupo diariamente. Aqueles cujos passos já marcaram tantas trilhas conosco, cujos olhares viram o sol nascer e se pôr nas montanhas mais difíceis. Vocês são o sangue e o fôlego do Mais Trilha. A força que nos move a cada novo cume."
             </p>
 
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => router.push('/olhares')}
-              className="inline-flex items-center gap-3 bg-transparent border-2 border-white/20 hover:border-[#F17B37] hover:bg-[#F17B37]/10 text-white px-8 py-4 rounded-full font-medium text-lg transition-all"
-            >
-              Dedique um momento a eles <ArrowRight className="h-5 w-5" />
-            </motion.button>
+            <div className="relative inline-block">
+                {/* Partículas destacando o botão */}
+                <div className="absolute -inset-10 pointer-events-none z-0">
+                  {[...Array(8)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute rounded-full bg-[#F17B37]"
+                      style={{
+                        width: Math.random() * 3 + 2,
+                        height: Math.random() * 3 + 2,
+                        boxShadow: '0 0 8px 2px #F17B37',
+                      }}
+                      initial={{
+                        x: '50%', y: '50%', opacity: 0,
+                        left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`
+                      }}
+                      animate={{
+                        y: [0, Math.random() * -60 - 20],
+                        x: [0, (Math.random() - 0.5) * 40],
+                        opacity: [0, 1, 0],
+                        scale: [0.5, 1.5, 0.5]
+                      }}
+                      transition={{
+                        duration: Math.random() * 2 + 2,
+                        repeat: Infinity,
+                        ease: "easeOut",
+                        delay: Math.random() * 2
+                      }}
+                    />
+                  ))}
+                </div>
+
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => router.push('/olhares')}
+                  className="relative z-10 inline-flex items-center gap-3 bg-transparent border-2 border-white/20 hover:border-[#F17B37] hover:bg-[#F17B37]/10 text-white px-8 py-4 rounded-full font-medium text-lg transition-all"
+                >
+                  Dedique um momento a eles <ArrowRight className="h-5 w-5" />
+                </motion.button>
+              </div>
           </motion.div>
         </div>
       </section>
@@ -277,7 +346,7 @@ export default function LandingPage() {
       {/* 4. GALERIA COMUNIDADE E PESSOAS ESPECIAIS (MASONRY REAL) */}
       <section className="py-32 px-6 bg-[#0F1722] relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-white/5 to-[#0F1722] z-0" />
-
+        
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-20">
             <h2 className="text-5xl font-black mb-4 drop-shadow-xl">Nossa Comunidade</h2>

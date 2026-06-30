@@ -107,6 +107,14 @@ function CheckoutAuthContent() {
     setStep('edit');
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setClientData(null);
+    setEmail('');
+    setOtp('');
+    setStep('email');
+  };
+
   const saveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -301,7 +309,10 @@ function CheckoutAuthContent() {
                     <p className="text-xs text-gray-400 mt-1">{clientData.cpf}</p>
                   </div>
                 </div>
-                <button onClick={openEdit} className="text-xs text-[#F17B37] hover:underline font-bold bg-white/5 px-3 py-2 rounded-xl">Editar</button>
+                <div className="flex flex-col gap-2">
+                  <button onClick={openEdit} className="text-xs text-[#F17B37] hover:underline font-bold bg-white/5 px-3 py-2 rounded-xl">Editar</button>
+                  <button onClick={handleLogout} className="text-xs text-red-400 hover:underline font-bold bg-white/5 px-3 py-2 rounded-xl">Trocar Conta</button>
+                </div>
               </div>
               
               <div className="bg-orange-500/10 border border-orange-500/20 p-4 rounded-xl mb-6 text-xs text-orange-200">

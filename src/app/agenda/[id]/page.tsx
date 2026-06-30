@@ -11,6 +11,7 @@ export default function AgendaDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const [agenda, setAgenda] = useState<any>(null);
+  const [isMaintenance, setIsMaintenance] = useState(false);
   const [paidCount, setPaidCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -19,7 +20,14 @@ export default function AgendaDetailsPage() {
 
   useEffect(() => {
     async function fetchAgenda() {
-      const { data, error } = await supabase
+      const { data: resSettings } = await supabase.from('settings').select('*').single();
+        if (resSettings && resSettings.maintenance_mode) {
+          setIsMaintenance(true);
+          setIsLoading(false);
+          return;
+        }
+
+        const { data, error } = await supabase
         .from('agendas')
         .select('*')
         .eq('id', params.id as string)

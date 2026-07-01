@@ -1,16 +1,19 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Navigation } from "@/components/Navigation";
 import { Heart, Users, Map, Leaf, ChevronDown } from "lucide-react";
 
 export default function SobrePage() {
+  const [activeTab, setActiveTab] = useState<'historia' | 'equipe'>('historia');
+
   return (
     <div className="bg-[#0F1722] text-white min-h-screen overflow-x-hidden font-sans selection:bg-[#F17B37] selection:text-white pb-20 relative">
       <Navigation />
 
       {/* Hero Section */}
-      <section className="relative pt-40 pb-20 px-6 flex flex-col items-center justify-center min-h-[70vh] text-center overflow-hidden">
+      <section className="relative pt-40 pb-10 px-6 flex flex-col items-center justify-center text-center overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#F17B37]/10 via-[#0F1722]/80 to-[#0F1722] z-0" />
         
         <motion.div 
@@ -18,84 +21,178 @@ export default function SobrePage() {
           animate={{ opacity: 1, y: 0 }}
           className="relative z-10 max-w-4xl mx-auto"
         >
-          <h2 className="text-[#F17B37] font-bold tracking-[0.3em] uppercase text-sm mb-6 drop-shadow-lg">A Nossa Essência</h2>
+          <h2 className="text-[#F17B37] font-bold tracking-[0.3em] uppercase text-sm mb-6 drop-shadow-lg">Conheça o Mais Trilha</h2>
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-[0.9] mb-8 drop-shadow-2xl">
-            Como tudo <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F17B37] to-amber-500">começou</span>
+            Quem <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F17B37] to-amber-500">Somos</span>
           </h1>
-          <p className="text-xl md:text-2xl text-gray-300 leading-relaxed max-w-3xl mx-auto">
-            O Mais Trilha Menos Estresse nasceu da vontade de conectar pessoas incríveis através da natureza. 
+          <p className="text-xl md:text-2xl text-gray-300 leading-relaxed max-w-3xl mx-auto mb-10">
             Não somos apenas uma agência de turismo, somos uma verdadeira família de trilheiros apaixonados por aventura, superação e bem-estar.
           </p>
         </motion.div>
 
+        {/* Tab Selector - Estilo Painel/Pílula */}
         <motion.div 
-          initial={{ opacity: 0 }} 
-          animate={{ opacity: 1 }} 
-          transition={{ delay: 1 }}
-          className="absolute bottom-10 z-10 animate-bounce text-gray-500"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="relative z-10 flex bg-white/5 p-1.5 rounded-full border border-white/10 backdrop-blur-md shadow-2xl max-w-md mx-auto w-full"
         >
-          <ChevronDown className="w-8 h-8" />
+          <button 
+            onClick={() => setActiveTab('historia')}
+            className={`flex-1 py-3 px-6 rounded-full font-bold text-sm transition-all duration-300 ${activeTab === 'historia' ? 'bg-[#F17B37] text-white shadow-[0_0_15px_rgba(241,123,55,0.4)]' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+          >
+            A Nossa História
+          </button>
+          <button 
+            onClick={() => setActiveTab('equipe')}
+            className={`flex-1 py-3 px-6 rounded-full font-bold text-sm transition-all duration-300 ${activeTab === 'equipe' ? 'bg-[#F17B37] text-white shadow-[0_0_15px_rgba(241,123,55,0.4)]' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+          >
+            Nossa Equipe
+          </button>
         </motion.div>
       </section>
 
-      {/* Content Section */}
-      <section className="py-20 px-6 relative z-10">
+      {/* Content Section - Tabs */}
+      <section className="py-10 px-6 relative z-10 min-h-[50vh]">
         <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center mb-24">
-            <motion.div 
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-            >
-              <img 
-                src="/FotosEvideos/Nivea/IMG_0521.JPG" 
-                alt="Nossa história" 
-                className="w-full h-[500px] object-cover rounded-[2rem] shadow-2xl shadow-[#F17B37]/20 border border-white/10"
-              />
-            </motion.div>
-            <motion.div 
-              initial={{ opacity: 0, x: 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="space-y-6 text-lg text-gray-300"
-            >
-              <h2 className="text-4xl font-black text-white mb-8">Muito mais que trilhas</h2>
-              <p>
-                Nossa missão sempre foi clara: proporcionar momentos inesquecíveis longe do caos da cidade. 
-                Acreditamos no poder curativo da natureza e em como caminhar ao ar livre pode transformar vidas, reduzindo a ansiedade e trazendo mais clareza mental.
-              </p>
-              <p>
-                Cada expedição é cuidadosamente planejada para garantir segurança, diversão e, acima de tudo, acolhimento. 
-                Ninguém fica para trás. Quando você viaja com o Mais Trilha, você ganha amigos para a vida toda.
-              </p>
-            </motion.div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              { icon: Heart, title: "Paixão", desc: "Amamos o que fazemos e a natureza que nos cerca." },
-              { icon: Users, title: "Comunidade", desc: "Uma família unida por aventuras e boas risadas." },
-              { icon: Map, title: "Exploração", desc: "Roteiros exclusivos e destinos surpreendentes." },
-              { icon: Leaf, title: "Ecoturismo", desc: "Respeito total ao meio ambiente em cada passo." },
-            ].map((item, i) => (
+          <AnimatePresence mode="wait">
+            
+            {activeTab === 'historia' && (
               <motion.div 
-                key={i}
+                key="historia"
                 initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="bg-white/5 border border-white/10 p-8 rounded-3xl backdrop-blur-sm hover:bg-white/10 transition-colors"
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4 }}
               >
-                <div className="w-14 h-14 bg-[#F17B37]/20 rounded-2xl flex items-center justify-center text-[#F17B37] mb-6">
-                  <item.icon className="w-7 h-7" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center mb-24">
+                  <div>
+                    <img 
+                      src="/FotosEvideos/Nivea/IMG_0521.JPG" 
+                      alt="Nossa história" 
+                      className="w-full h-[500px] object-cover rounded-[2rem] shadow-2xl shadow-[#F17B37]/20 border border-white/10"
+                    />
+                  </div>
+                  <div className="space-y-6 text-lg text-gray-300 leading-relaxed">
+                    <h2 className="text-4xl font-black text-white mb-8">Muito mais que trilhas</h2>
+                    <p>
+                      Nossa missão sempre foi clara: proporcionar momentos inesquecíveis longe do caos da cidade. 
+                      Acreditamos no poder curativo da natureza e em como caminhar ao ar livre pode transformar vidas, reduzindo a ansiedade e trazendo mais clareza mental.
+                    </p>
+                    <p>
+                      Cada expedição é cuidadosamente planejada para garantir segurança, diversão e, acima de tudo, acolhimento. 
+                      Ninguém fica para trás. Quando você viaja com o Mais Trilha, você ganha amigos para a vida toda.
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-3">{item.title}</h3>
-                <p className="text-gray-400">{item.desc}</p>
+
+                {/* Icons Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mt-20">
+                  {[
+                    { icon: Heart, title: "Paixão", desc: "Amamos o que fazemos e a natureza que nos cerca." },
+                    { icon: Users, title: "Comunidade", desc: "Uma família unida por aventuras e boas risadas." },
+                    { icon: Map, title: "Exploração", desc: "Roteiros exclusivos e destinos surpreendentes." },
+                    { icon: Leaf, title: "Ecoturismo", desc: "Respeito total ao meio ambiente em cada passo." },
+                  ].map((item, i) => (
+                    <div key={i} className="bg-white/5 border border-white/10 p-8 rounded-3xl backdrop-blur-sm hover:bg-white/10 transition-colors">
+                      <div className="w-14 h-14 bg-[#F17B37]/20 rounded-2xl flex items-center justify-center text-[#F17B37] mb-6">
+                        <item.icon className="w-7 h-7" />
+                      </div>
+                      <h3 className="text-xl font-bold text-white mb-3">{item.title}</h3>
+                      <p className="text-gray-400">{item.desc}</p>
+                    </div>
+                  ))}
+                </div>
               </motion.div>
-            ))}
-          </div>
+            )}
+
+            {activeTab === 'equipe' && (
+              <motion.div 
+                key="equipe"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4 }}
+                className="space-y-32"
+              >
+                {/* Membro 1: Nívea */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                  <div className="order-2 md:order-1 space-y-6 text-lg text-gray-300 leading-relaxed">
+                    <h2 className="text-4xl md:text-5xl font-black text-white mb-2">Nívea Maria</h2>
+                    <h3 className="text-[#F17B37] font-bold tracking-[0.2em] uppercase text-sm mb-8">Guia e Fundadora</h3>
+                    
+                    <p>
+                      Me chamo Nívea Magalhães, tenho 35 anos e, há três, o ecoturismo transformou a minha vida. Minha conexão com a natureza vem de berço: sempre amei o simples, o essencial, e é nela que me sinto verdadeiramente em casa.
+                    </p>
+                    <p>
+                      Cresci vendo meu tio desbravar trilhas e escalar montanhas. Eu ajudava a arrumar a mochila dele fascinada por aquele universo, mas, por muito tempo, sufoquei esse sonho. Acreditava que aquela vida não era para mim — que não era o lugar de uma mulher, mãe e casada, aos 32 anos.
+                    </p>
+                    <p>
+                      Tudo mudou quando organizei uma viagem para a Cachoeira do Tabuleiro, na tentativa de animar esse meu tio que passava por um momento difícil. Ele acabou não podendo ir, e eu decidi encarar o desafio sozinha. Mas a vida tem formas lindas de nos surpreender: o que seria uma viagem solitária virou uma expedição inesquecível de cinco mulheres. Amigas e até a minha mãe embarcaram comigo de madrugada, rumo ao desconhecido.
+                    </p>
+                    <p>
+                      Nesse dia aconteceu de tudo: enfrentamos um frio de 7 graus, o carro ferveu na estrada e até o dono de uma carteira perdida nós tivemos que procurar. Mas sabe de uma coisa? Nada disso ofuscou a magia daquele momento. Pelo contrário: foi ali, superando cada obstáculo, que eu resgatei uma força e uma coragem que nem sabia que existiam em mim.
+                    </p>
+                    <p>
+                      Hoje, fiz dessa descoberta o meu grande propósito de vida. Guiar pessoas e levá-las a lugares que elas achavam ser impossíveis de alcançar é o que faz o meu coração bater mais forte. Ver de perto o brilho nos olhos e a emoção de cada um ao se conectar com a natureza é um privilégio indescritível. Eu não apenas amo o que eu faço: eu vivo o meu maior sonho.
+                    </p>
+                  </div>
+                  <div className="order-1 md:order-2 relative">
+                    <div className="absolute inset-0 bg-[#F17B37] blur-[100px] opacity-20 rounded-full" />
+                    <img 
+                      src="/FotosEvideos/equipe/nivea_historia.webp" 
+                      alt="Nívea Maria" 
+                      className="relative z-10 w-full h-[600px] object-cover rounded-[2rem] shadow-2xl border-4 border-white/10 hover:border-[#F17B37]/50 transition-colors duration-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Membro 2: Palestino */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-[#25D366] blur-[100px] opacity-10 rounded-full" />
+                    <img 
+                      src="/FotosEvideos/equipe/palestino.webp" 
+                      alt="Palestino" 
+                      className="relative z-10 w-full h-[600px] object-cover rounded-[2rem] shadow-2xl border-4 border-white/10 hover:border-[#25D366]/50 transition-colors duration-500"
+                    />
+                  </div>
+                  <div className="space-y-6 text-lg text-gray-300 leading-relaxed">
+                    <h2 className="text-4xl md:text-5xl font-black text-white mb-2">Palestino</h2>
+                    <h3 className="text-[#F17B37] font-bold tracking-[0.2em] uppercase text-sm mb-8">Motorista Oficial</h3>
+                    
+                    <p>
+                      Conheci o Mais Trilha através do meu antigo trabalho, quando meu patrão fechou um frete com o grupo e me escalou para a viagem. Na primeira vez, confesso que fiquei tenso; não conhecia ninguém e a gente sempre fica um pouco receoso diante do desconhecido. Mas a recepção não poderia ter sido melhor: fui acolhido de braços abertos pela Nívea e por todos os clientes, que me incentivaram logo de cara a participar da caminhada com eles.
+                    </p>
+                    <p>
+                      A sintonia foi tão grande que, nas trilhas seguintes, a Nívea fez questão de pedir ao meu patrão que eu fosse o motorista oficial. Com o tempo, o que começou como uma simples prestação de serviço transformou-se em algo muito maior. Hoje, o Mais Trilha é muito mais do que um trabalho para mim: é sinônimo de amizade, parceria e família.
+                    </p>
+                    <p>
+                      Essa jornada mudou completamente a minha vida. Eu vinha de uma rotina exaustiva e acelerada como caminhoneiro, rodando as estradas dia e noite. O contato com o ecoturismo me tirou do sedentarismo e me conectou profundamente com a natureza, onde o estresse e as preocupações frequentes simplesmente deixaram de existir. O grupo se tornou minha rede de apoio, sempre me motivando a cuidar da saúde e a evoluir como pessoa e profissional.
+                    </p>
+                    <p>
+                      Hoje, não me vejo sem o Mais Trilha. Tenho um carinho e um respeito enorme por cada participante, pois o caminho nos ensina diariamente a nossa maior lição: na trilha, ninguém solta a mão de ninguém e somos todos iguais.
+                    </p>
+                  </div>
+                </div>
+
+              </motion.div>
+            )}
+
+          </AnimatePresence>
         </div>
       </section>
+
+      {/* Footer simplificado */}
+      <footer className="mt-20 border-t border-white/10 pt-10 text-center text-gray-500 text-sm flex flex-col items-center gap-4">
+        <img 
+          src="/FotosEvideos/logo/rodape.JPG" 
+          alt="Montanhas Mais Trilha" 
+          className="h-12 w-auto mix-blend-screen opacity-50"
+          style={{ filter: 'contrast(1.8) brightness(0.8)' }} 
+        />
+        <p>© {new Date().getFullYear()} Todos os direitos reservados a Mais Trilha Menos Estresse.</p>
+      </footer>
     </div>
   );
 }

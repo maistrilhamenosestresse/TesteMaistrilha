@@ -63,17 +63,21 @@ export async function POST(request: Request) {
     if (error) {
       console.error("Erro ao atualizar reservas:", error);
     } else {
-      // 2. Buscar Dados para Notificação e Email (pegando a primeira reserva como referência)
+      // 2. Buscar Dados para Notificação e Email (tentando achar o comprador principal)
       try {
-        const { data: resData } = await supabase
+        const { data: allRes } = await supabase
           .from('reservas')
           .select('*, clients(*), agendas(*)')
-          .eq('id', reserva_ids[0])
-          .single();
+          .in('id', reserva_ids);
+
+        let resData = null;
+        if (allRes && allRes.length > 0) {
+          resData = allRes.find(r => r.clients && r.clients.email) || allRes[0];
+        }
 
         if (resData && resData.clients && resData.agendas) {
           
-          let mensagemNotificacao = `🤑 COMPRA APROVADA: ${resData.clients.full_name} comprou ${reserva_ids.length} vaga(s) para ${resData.agendas.title} no valor total de R$ ${(paid_amount / 100).toFixed(2)}`;
+          let mensagemNotificacao = `COMPRA APROVADA: ${resData.clients.full_name} comprou ${reserva_ids.length} vaga(s) para ${resData.agendas.title} no valor total de R$ ${(paid_amount / 100).toFixed(2)}`;
 
           // Inserir Notificação Bonita
           await supabase.from('notificacoes').insert([{

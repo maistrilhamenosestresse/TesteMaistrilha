@@ -1007,16 +1007,18 @@ export default function AdminPage() {
                                     <div><p className="text-gray-500 text-xs font-bold uppercase">RG</p><p className="font-medium">{client.rg}</p></div>
                                     <div className="col-span-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                                       <div><p className="text-gray-500 text-xs font-bold uppercase">Contato Emergência</p><p className="font-medium">{client.emergency_contact_name} - {client.emergency_contact_phone}</p></div>
-                                      <button 
-                                        onClick={() => {
-                                          const link = `${window.location.origin}/cadastro?cpf=${client.cpf}`;
-                                          navigator.clipboard.writeText(link);
-                                          alert("Link copiado: " + link);
-                                        }}
-                                        className="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 border border-blue-200 transition"
-                                      >
-                                        <Copy className="h-3 w-3" /> Copiar link de finalizar cadastro
-                                      </button>
+                                      {(!client.rg || !client.birth_date || !client.emergency_contact_name || !client.accepted_terms_at) && (
+                                        <button 
+                                          onClick={() => {
+                                            const link = `${window.location.origin}/cadastro?cpf=${client.cpf}`;
+                                            navigator.clipboard.writeText(link);
+                                            alert("Link copiado: " + link);
+                                          }}
+                                          className="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 border border-blue-200 transition"
+                                        >
+                                          <Copy className="h-3 w-3" /> Copiar link de finalizar cadastro
+                                        </button>
+                                      )}
                                     </div>
                                   </div>
                                   

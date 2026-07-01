@@ -27,8 +27,12 @@ function SucessoContent() {
   useEffect(() => {
     if (depsParam) {
       const cpfs = depsParam.split(',');
-      supabase.from('clients').select('id, full_name, cpf').in('cpf', cpfs).then(({data}) => {
-        if (data) setDependents(data);
+      supabase.from('clients').select('*').in('cpf', cpfs).then(({data}) => {
+        if (data) {
+          // Filtrar apenas dependentes que NÃO tem cadastro completo
+          const incomplete = data.filter(d => !d.rg || !d.birth_date || !d.emergency_contact_name || !d.accepted_terms_at);
+          setDependents(incomplete);
+        }
       });
     }
   }, [depsParam]);

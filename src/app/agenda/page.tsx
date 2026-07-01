@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Calendar, MapPin, DollarSign, ChevronRight, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { Navigation } from "@/components/Navigation";
 
 export default function AgendaList() {
   const [agendas, setAgendas] = useState<any[]>([]);
@@ -77,6 +78,7 @@ export default function AgendaList() {
 
   return (
     <div className="min-h-screen bg-[#0F1722] text-white font-sans selection:bg-[#F17B37] selection:text-white pb-20 overflow-hidden relative">
+      <Navigation />
       
       {/* Background Decorativo */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#F17B37] rounded-full blur-[150px] opacity-10 pointer-events-none" />

@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import { ChevronDown, ArrowRight, TreePine, Map, Users, Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Navigation } from "@/components/Navigation";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -45,20 +46,8 @@ export default function LandingPage() {
   return (
     <div className="bg-[#0F1722] text-white min-h-screen overflow-x-hidden font-sans selection:bg-[#F17B37] selection:text-white">
 
-      {/* NAVEGAÇÃO */}
-      <nav className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-4 bg-transparent md:bg-gradient-to-b md:from-[#0F1722] md:to-transparent md:backdrop-blur-sm">
-        <div className="flex items-center gap-3">
-          <img src="/FotosEvideos/logo/55C232D4-8B60-45C4-82BC-4B25960F8B60%20Copy.JPG" alt="Mais Trilha Logo" className="h-20 w-20 rounded-full aspect-square object-cover object-center shadow-[0_0_15px_rgba(241,123,55,0.4)] border-5 border-[#F17B37]/30" />
-        </div>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => router.push('/agenda')}
-            className="bg-[#F17B37] hover:bg-[#e06925] text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all hover:scale-105 shadow-[0_0_20px_rgba(241,123,55,0.3)]"
-          >
-            Ver Trilhas
-          </button>
-        </div>
-      </nav>
+      {/* NAVEGAÇÃO GLOBAL */}
+      <Navigation />
 
       {/* 1. HERO SECTION */}
       <motion.section
@@ -428,7 +417,7 @@ export default function LandingPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
             <button onClick={() => router.push('/agenda')} className="w-full sm:w-auto bg-[#F17B37] hover:bg-[#e06925] text-white px-8 py-4 rounded-full font-bold text-lg transition-all shadow-[0_0_30px_rgba(241,123,55,0.4)] hover:shadow-[0_0_50px_rgba(241,123,55,0.6)] flex items-center justify-center gap-2 hover:scale-105">
-              <Map className="h-5 w-5" /> Ver Próximas Trilhas
+              <Map className="h-5 w-5" /> Ver Agenda Completa
             </button>
             <a href="https://wa.me/5531998793939?text=Oi Nívea! Quero entrar no grupo VIP do Mais Trilha!" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-full font-bold text-lg transition-all flex items-center justify-center gap-3 hover:scale-105 ring-1 ring-white/20">
               <Users className="h-5 w-5" /> Entrar no Grupo 

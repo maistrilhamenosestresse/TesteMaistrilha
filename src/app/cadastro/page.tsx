@@ -16,6 +16,8 @@ function CadastroContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [isDuplicateBlock, setIsDuplicateBlock] = useState(false);
+  const [duplicateBlockMessage, setDuplicateBlockMessage] = useState("");
   
   const searchParams = useSearchParams();
   const agendaId = searchParams.get('agenda_id');
@@ -49,6 +51,11 @@ function CadastroContent() {
     if (initialCpf) {
       supabase.from('clients').select('*').eq('cpf', initialCpf).single().then(({data}) => {
         if (data) {
+          if (data.rg && data.birth_date && data.emergency_contact_phone) {
+             setDuplicateBlockMessage("Identificamos que seu cadastro já está completo em nosso sistema. Você não precisa preencher novamente.");
+             setIsDuplicateBlock(true);
+             return;
+          }
           setFormData(prev => ({
             ...prev,
             full_name: data.full_name || prev.full_name,
@@ -97,7 +104,32 @@ function CadastroContent() {
 
   if (!mounted) return null;
 
-  const handleNext = () => setStep(prev => prev + 1);
+  const handleNext = async () => {
+    if (step === 2 && !initialCpf) {
+      setIsLoading(true);
+      try {
+        const { data } = await supabase.from('clients').select('rg, birth_date, emergency_contact_phone').eq('cpf', formData.cpf).single();
+        if (data) {
+          if (data.rg && data.birth_date && data.emergency_contact_phone) {
+             setDuplicateBlockMessage("Identificamos que seu cadastro já está completo em nosso sistema. Você não precisa preencher novamente.");
+             setIsDuplicateBlock(true);
+             setIsLoading(false);
+             return;
+          }
+          if (items.length === 0 && !agendaId) {
+             setDuplicateBlockMessage("Seu cadastro está pendente. Por favor, utilize o link de conclusão que foi enviado no seu e-mail.");
+             setIsDuplicateBlock(true);
+             setIsLoading(false);
+             return;
+          }
+        }
+      } catch (e) {
+         // ignorar erro se cpf não encontrado
+      }
+      setIsLoading(false);
+    }
+    setStep(prev => prev + 1);
+  };
   const handlePrev = () => setStep(prev => prev - 1);
 
   const formatCPF = (v: string) => {
@@ -333,6 +365,32 @@ function CadastroContent() {
     }
   };
 
+  if (isDuplicateBlock) {
+    return (
+      <div className="min-h-screen bg-[#0F1722] flex items-center justify-center p-6">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-[#1a2332] border border-white/10 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl"
+        >
+          <div className="w-20 h-20 bg-[#25D366]/20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 className="h-10 w-10 text-[#25D366]" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-4">Cadastro Verificado!</h2>
+          <p className="text-gray-300 mb-8 leading-relaxed">
+            {duplicateBlockMessage}
+          </p>
+          <button 
+            onClick={() => window.location.href = '/'}
+            className="w-full bg-[#F17B37] text-white py-3 rounded-xl font-bold hover:bg-[#d9682b] transition"
+          >
+            Voltar para o Início
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
   if (isSuccess) {
     return (
       <div className="min-h-screen bg-[#0F1722] flex items-center justify-center p-6">
@@ -526,10 +584,10 @@ function CadastroContent() {
                   <button 
                     type="button" 
                     onClick={handleNext}
-                    disabled={!formData.cpf || !formData.rg || !formData.birth_date}
+                    disabled={!formData.cpf || !formData.rg || !formData.birth_date || isLoading}
                     className="flex-1 bg-white/10 text-white p-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-white/20 transition disabled:opacity-50"
                   >
-                    Continuar <ChevronRight className="h-5 w-5" />
+                    {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Continuar <ChevronRight className="h-5 w-5" /></>}
                   </button>
                 </div>
               </motion.div>

@@ -54,7 +54,13 @@ export async function sendPurchaseEmail(client: any, agenda: any, allReservas: a
               .filter(r => r.clients && r.clients.id !== client.id)
               .map(r => r.clients);
             
-            const uniqueAcompanhantes = Array.from(new Map(acompanhantes.map(a => [a.cpf, a])).values());
+            let uniqueAcompanhantes = Array.from(new Map(acompanhantes.map(a => [a.cpf, a])).values());
+            
+            // Remove acompanhantes que já estão com o cadastro 100% completo
+            uniqueAcompanhantes = uniqueAcompanhantes.filter(acomp => {
+               const isComplete = acomp.rg && acomp.birth_date && acomp.emergency_contact_phone;
+               return !isComplete;
+            });
             
             if (uniqueAcompanhantes.length === 0) return '';
             

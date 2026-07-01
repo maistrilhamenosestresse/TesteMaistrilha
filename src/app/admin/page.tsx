@@ -1105,74 +1105,7 @@ export default function AdminPage() {
                           </div>
                         </div>
 
-                        {/* Tabela Interativa de Passageiros e Inserção Manual */}
-                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                          <div className="bg-[#1D2A3A] p-4 flex justify-between items-center text-white">
-                            <h3 className="font-bold flex items-center gap-2"><User className="h-5 w-5"/> Gerenciar Passageiros</h3>
-                            <div className="flex gap-2">
-                              <button onClick={() => handleExportCSV('reservas')} className="bg-white/10 hover:bg-white/20 p-2 rounded-xl transition text-xs font-bold flex items-center gap-1">
-                                <FileUp className="h-4 w-4" /> Baixar Excel
-                              </button>
-                              <span className="bg-white/20 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center">{reservas.length} / {selectedAgendaData?.max_capacity || 15} Vagas</span>
-                            </div>
-                          </div>
-                          
-                          <div className="p-4 space-y-3 max-h-[40vh] overflow-y-auto custom-scrollbar">
-                            {reservas.length === 0 ? (
-                              <p className="text-center text-gray-400 py-6 text-sm font-medium">Nenhum passageiro nesta trilha ainda.</p>
-                            ) : (
-                              reservas.map(reserva => (
-                                <div key={reserva.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-xl hover:bg-gray-50">
-                                  <div>
-                                    <p className="font-bold text-gray-800 text-sm">{reserva.clients?.full_name}</p>
-                                    <div className="flex items-center gap-2 mt-1">
-                                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${reserva.status_pagamento === 'pago' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
-                                        {reserva.status_pagamento.toUpperCase()}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <button onClick={() => handleDeleteReserva(reserva.id)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"><Trash2 className="h-4 w-4"/></button>
-                                </div>
-                              ))
-                            )}
-                          </div>
-                        </div>
 
-                        {/* Adicionar Manualmente */}
-                        <form onSubmit={handleAddReserva} className={`${(reservas.filter(r => r.status_pagamento === 'pago' || r.status_pagamento === 'pendente').length >= (selectedAgendaData?.max_capacity || 15)) ? 'bg-gray-100 border-gray-200 opacity-70' : 'bg-blue-50/50 border-blue-100'} p-5 rounded-2xl border space-y-4`}>
-                          <h4 className={`font-bold flex items-center gap-2 text-sm ${(reservas.filter(r => r.status_pagamento === 'pago' || r.status_pagamento === 'pendente').length >= (selectedAgendaData?.max_capacity || 15)) ? 'text-gray-500' : 'text-blue-900'}`}>
-                            <Plus className="h-4 w-4"/> {(reservas.filter(r => r.status_pagamento === 'pago' || r.status_pagamento === 'pendente').length >= (selectedAgendaData?.max_capacity || 15)) ? 'Trilha Esgotada - Inserção Bloqueada' : 'Inserir Passageiro Manualmente'}
-                          </h4>
-                          <select 
-                            value={novaReservaClientId} 
-                            onChange={(e) => setNovaReservaClientId(e.target.value)}
-                            disabled={(reservas.filter(r => r.status_pagamento === 'pago' || r.status_pagamento === 'pendente').length >= (selectedAgendaData?.max_capacity || 15))}
-                            className="w-full p-3 bg-white border border-gray-200 rounded-xl text-sm outline-none disabled:bg-gray-50 disabled:cursor-not-allowed"
-                          >
-                            <option value="">Selecione um cliente cadastrado...</option>
-                            {clients.map(c => (
-                              <option key={c.id} value={c.id}>{c.full_name} ({c.cpf})</option>
-                            ))}
-                          </select>
-                          <div className="flex gap-3">
-                            <select 
-                              value={novaReservaStatus} 
-                              onChange={(e) => setNovaReservaStatus(e.target.value)}
-                              disabled={(reservas.filter(r => r.status_pagamento === 'pago' || r.status_pagamento === 'pendente').length >= (selectedAgendaData?.max_capacity || 15))}
-                              className="w-1/2 p-3 bg-white border border-gray-200 rounded-xl text-sm outline-none disabled:bg-gray-50 disabled:cursor-not-allowed"
-                            >
-                              <option value="pago">PAGO</option>
-                              <option value="pendente">PENDENTE</option>
-                            </select>
-                            <button 
-                              type="submit" 
-                              disabled={(reservas.filter(r => r.status_pagamento === 'pago' || r.status_pagamento === 'pendente').length >= (selectedAgendaData?.max_capacity || 15))}
-                              className={`w-1/2 font-bold rounded-xl shadow-sm transition ${(reservas.filter(r => r.status_pagamento === 'pago' || r.status_pagamento === 'pendente').length >= (selectedAgendaData?.max_capacity || 15)) ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
-                            >
-                              Adicionar
-                            </button>
-                          </div>
-                        </form>
                       </>
                     )}
                   </div>
@@ -1729,7 +1662,14 @@ export default function AdminPage() {
             <span className="text-[9px] font-bold tracking-wide">Trilhas</span>
           </button>
 
-          
+          <button 
+            onClick={() => setMainTab('clientes')}
+            className={`flex flex-col items-center justify-center w-full py-3 transition-colors relative ${mainTab === 'clientes' ? 'text-[#F17B37]' : 'text-gray-400 hover:text-gray-600'}`}
+          >
+            {mainTab === 'clientes' && <motion.div layoutId="nav-pill" className="absolute top-0 w-10 h-1 bg-[#F17B37] rounded-b-full" />}
+            <FileText className="h-5 w-5 mb-1" />
+            <span className="text-[9px] font-bold tracking-wide">Clientes</span>
+          </button>
           
           {/* BOTÃO ASSISTENTE IA CENTRALIZADO COM ANIMAÇÕES MODERNAS */}
           <div className="relative -top-6 flex justify-center w-[70px] shrink-0 mx-1">
@@ -1744,30 +1684,21 @@ export default function AdminPage() {
           </div>
 
           <button 
-            onClick={() => setMainTab('financas')}
-            className={`flex flex-col items-center justify-center w-full py-3 transition-colors relative ${mainTab === 'financas' ? 'text-[#25D366]' : 'text-gray-400 hover:text-gray-600'}`}
-          >
-            {mainTab === 'financas' && <motion.div layoutId="nav-pill" className="absolute top-0 w-10 h-1 bg-[#25D366] rounded-b-full" />}
-            <DollarSign className="h-5 w-5 mb-1" />
-            <span className="text-[9px] font-bold tracking-wide">Finanças</span>
-          </button>
-
-          <button 
-            onClick={() => setMainTab('clientes')}
-            className={`flex flex-col items-center justify-center w-full py-3 transition-colors relative ${mainTab === 'clientes' ? 'text-[#F17B37]' : 'text-gray-400 hover:text-gray-600'}`}
-          >
-            {mainTab === 'clientes' && <motion.div layoutId="nav-pill" className="absolute top-0 w-10 h-1 bg-[#F17B37] rounded-b-full" />}
-            <FileText className="h-5 w-5 mb-1" />
-            <span className="text-[9px] font-bold tracking-wide">Clientes</span>
-          </button>
-          
-          <button 
             onClick={() => setMainTab('reservas')} 
             className={`flex flex-col items-center justify-center w-full py-3 transition-colors relative ${mainTab === 'reservas' ? 'text-[#F17B37]' : 'text-gray-400 hover:text-gray-600'}`}
           >
             {mainTab === 'reservas' && <motion.div layoutId="nav-pill" className="absolute top-0 w-10 h-1 bg-[#F17B37] rounded-b-full" />}
             <User className="h-5 w-5 mb-1" />
             <span className="text-[9px] font-bold tracking-wide">Reservas</span>
+          </button>
+
+          <button 
+            onClick={() => setMainTab('financas')}
+            className={`flex flex-col items-center justify-center w-full py-3 transition-colors relative ${mainTab === 'financas' ? 'text-[#25D366]' : 'text-gray-400 hover:text-gray-600'}`}
+          >
+            {mainTab === 'financas' && <motion.div layoutId="nav-pill" className="absolute top-0 w-10 h-1 bg-[#25D366] rounded-b-full" />}
+            <DollarSign className="h-5 w-5 mb-1" />
+            <span className="text-[9px] font-bold tracking-wide">Finanças</span>
           </button>
 
         </div>

@@ -7,22 +7,27 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Copy } from "lucide-react";
 import { Suspense } from "react";
+import { useCartStore } from "@/store/cartStore";
 
 function SucessoContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { clearCart } = useCartStore();
   const agendaId = searchParams.get('agenda_id');
   const depsParam = searchParams.get('deps');
   const [agenda, setAgenda] = useState<any>(null);
   const [dependents, setDependents] = useState<any[]>([]);
 
   useEffect(() => {
+    // Limpar o carrinho ao entrar na página de sucesso
+    clearCart();
+
     if (agendaId) {
       supabase.from('agendas').select('*').eq('id', agendaId).single().then(({data}) => {
         if (data) setAgenda(data);
       });
     }
-  }, [agendaId]);
+  }, [agendaId, clearCart]);
 
   useEffect(() => {
     if (depsParam) {

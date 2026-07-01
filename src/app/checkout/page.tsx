@@ -215,7 +215,8 @@ function CheckoutAuthContent() {
       const resCheckout = await reqCheckout.json();
       
       if (resCheckout.url) {
-        clearCart();
+        // Removemos o clearCart daqui para não triggar o useEffect que joga pra home.
+        // O carrinho será mantido. Idealmente limpar na página de sucesso.
         window.location.href = resCheckout.url;
       } else {
         throw new Error("Link não gerado");
@@ -322,6 +323,26 @@ function CheckoutAuthContent() {
                   <button onClick={handleLogout} className="text-xs text-red-400 hover:underline font-bold bg-white/5 px-3 py-2 rounded-xl">Trocar Conta</button>
                 </div>
               </div>
+
+              {/* Renderizar Acompanhantes se existirem */}
+              {items.some(item => item.dependents && item.dependents.length > 0) && (
+                <div className="mb-6">
+                  <h4 className="text-sm font-bold text-gray-400 mb-3 uppercase tracking-wider">Acompanhantes</h4>
+                  <div className="space-y-3">
+                    {items.flatMap(item => item.dependents || []).filter(dep => dep.name && dep.cpf).map((dep, idx) => (
+                      <div key={idx} className="bg-white/5 border border-white/10 p-3 rounded-2xl flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gray-600/30 flex items-center justify-center text-gray-400 shrink-0">
+                          <UserIcon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm leading-tight text-gray-200">{dep.name}</p>
+                          <p className="text-xs text-gray-400 mt-1">{dep.cpf}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               
               <div className="bg-orange-500/10 border border-orange-500/20 p-4 rounded-xl mb-6 text-xs text-orange-200">
                 Ao prosseguir, você confirma que leu e está ciente dos riscos desta expedição, concordando com as regras do seguro e utilização de imagem.

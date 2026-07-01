@@ -14,8 +14,9 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.maistrilhasmenosestresse.com'),
-  title: "Mais Trilha Menos Estresse",
+  title: "Mais Trilha Menos Estresse » Ecoturismo, Trilhas e Bate-Volta",
   description: "Conheça um pouco da nossa história. Somos uma comunidade apaixonada pela natureza, aventura e bem-estar. Venha se desconectar do estresse e se reconectar com a vida através de trilhas incríveis!",
+  keywords: ["Mais Trilha", "Mais Trilhas", "Mais Trilha, menos estresse", "Mais Trilhas, menos estresse", "Mais Trilha Menos Estresse", "Ecoturismo", "Trilhas", "Trekking", "Aventura", "Bate-Volta", "Viagens", "Natureza"],
   openGraph: {
     title: "Mais Trilha Menos Estresse",
     description: "Conheça um pouco da nossa história. Somos uma comunidade apaixonada pela natureza, aventura e bem-estar. Venha se desconectar do estresse e se reconectar com a vida através de trilhas incríveis!",
@@ -61,6 +62,42 @@ export default function RootLayout({
       <body suppressHydrationWarning className="min-h-full flex flex-col max-w-full overflow-x-hidden">
         {/* Isca para o Warsaw (Diebold Nixdorf) - Evita Hydration Mismatch */}
         <div id="_tela" style={{ display: 'none' }}></div>
+        
+        {/* JSON-LD Schema.org para o Google Search (Associação da Marca e Sitelinks) */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "Mais Trilha Menos Estresse",
+              "alternateName": [
+                "Mais Trilha",
+                "Mais Trilhas",
+                "Mais Trilhas, menos estresse",
+                "Mais Trilha, menos estresse",
+                "MaisTrilha"
+              ],
+              "url": "https://www.maistrilhasmenosestresse.com",
+              "logo": "https://nyavgcggwygkywjboaxh.supabase.co/storage/v1/object/public/fotos_agendas/logo.png",
+              "sameAs": [
+                "https://www.instagram.com/maistrilhamenosestresse"
+              ]
+            })
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "name": "Mais Trilha Menos Estresse",
+              "url": "https://www.maistrilhasmenosestresse.com"
+            })
+          }}
+        />
+
         {children}
         <script
           dangerouslySetInnerHTML={{

@@ -22,8 +22,9 @@ export async function POST(request: Request) {
     // A API do InfinitePay espera o handle sem o $
     const infiniteTag = "nivea-maria-7en";
     
-    // Para múltiplos IDs, geramos um order_nsu customizado e armazenamos os reais no metadata
-    const order_nsu = ids.length === 1 ? ids[0] : `PEDIDO-${Date.now()}`;
+    // Para múltiplos IDs, enviamos tudo junto separado por vírgula no order_nsu 
+    // porque o webhook de PIX da InfinitePay não retorna o campo metadata!
+    const order_nsu = ids.join(',');
 
     const depsQuery = (dependentCPFs && dependentCPFs.length > 0) ? `&deps=${dependentCPFs.join(',')}` : '';
 

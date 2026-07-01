@@ -179,7 +179,7 @@ export default function CarrinhoPage() {
               
               <div className="flex flex-col md:flex-row gap-4">
                 <button 
-                  onClick={() => router.push('/')}
+                  onClick={() => router.push('/agenda')}
                   className="flex-1 px-6 py-4 bg-white/5 text-white rounded-xl font-bold hover:bg-white/10 transition border border-white/10"
                 >
                   Continuar Comprando

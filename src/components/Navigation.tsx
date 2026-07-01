@@ -3,13 +3,23 @@
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ShoppingCart } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useCartStore } from "@/store/cartStore";
+import { useEffect } from "react";
 
 export function Navigation() {
   const router = useRouter();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { getTotalQuantity } = useCartStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const cartQuantity = mounted ? getTotalQuantity() : 0;
 
   // Hide the navigation on admin or specific pages if needed.
   if (pathname?.startsWith('/admin')) return null;
@@ -52,10 +62,23 @@ export function Navigation() {
 
           <button
             onClick={() => router.push('/agenda')}
-            className="bg-[#F17B37] hover:bg-[#e06925] text-white px-4 md:px-6 py-2 md:py-2.5 rounded-full font-bold text-xs md:text-sm transition-all hover:scale-105 shadow-[0_0_20px_rgba(241,123,55,0.3)] whitespace-nowrap"
+            className="hidden md:block bg-[#F17B37] hover:bg-[#e06925] text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all hover:scale-105 shadow-[0_0_20px_rgba(241,123,55,0.3)] whitespace-nowrap"
           >
-            <span className="md:hidden">Ver Agenda</span>
-            <span className="hidden md:inline">Ver Agenda Completa</span>
+            Ver Agenda Completa
+          </button>
+
+          {/* Cart Icon */}
+          <button 
+            onClick={() => router.push('/carrinho')}
+            className="relative p-2 text-white hover:text-[#F17B37] transition-colors bg-white/5 md:bg-transparent rounded-xl md:rounded-none border border-white/10 md:border-transparent"
+            aria-label="Carrinho de Compras"
+          >
+            <ShoppingCart className="w-6 h-6 md:w-6 md:h-6" />
+            {cartQuantity > 0 && (
+              <span className="absolute top-0 right-0 bg-[#25D366] text-white text-[10px] font-bold w-4 h-4 md:w-5 md:h-5 rounded-full flex items-center justify-center translate-x-1 -translate-y-1 shadow-md">
+                {cartQuantity}
+              </span>
+            )}
           </button>
 
           {/* Mobile Menu Toggle */}

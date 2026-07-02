@@ -26,5 +26,6 @@ export default async function GerenciadorPage() {
   }
 
   // Usuário autenticado, renderiza a interface do IDE
-  return <WebIDEClient />;
+  const accessToken = (session as any).accessToken;
+  return <WebIDEClient accessToken={accessToken} />;
 }

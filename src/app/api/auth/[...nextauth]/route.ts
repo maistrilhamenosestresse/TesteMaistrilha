@@ -28,7 +28,7 @@ export const authOptions: NextAuthOptions = {
     },
   },
   pages: {
-    signIn: '/gerenciador/login', // We will build a custom login page
+    signIn: '/gerenciador', // Aponta para a própria página do gerenciador que já tem o botão
   },
 };
 

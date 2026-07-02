@@ -676,19 +676,79 @@ export default function AdminPage() {
   const whatsappLink = `https://wa.me/?text=${encodeURIComponent(`⛰️ A nossa agenda oficial chegou! Prepare as botas!\n\n👉 https://www.maistrilhasmenosestresse.com/agenda`)}`;
 
   return (
-    <div suppressHydrationWarning className="h-[100dvh] print:h-auto print:min-h-screen w-full flex flex-col bg-gray-50 overflow-hidden print:overflow-visible relative">
-      <header className="bg-white border-b border-gray-100 px-4 py-4 shrink-0 shadow-sm flex items-center justify-between z-10 print:hidden">
-        <div className="flex items-center gap-3">
-          <div className="bg-[#1D2A3A] p-2 rounded-xl shadow-md hidden sm:block">
+    <div suppressHydrationWarning className="h-[100dvh] print:h-auto print:min-h-screen w-full flex flex-col md:flex-row bg-gray-50 overflow-hidden print:overflow-visible relative">
+      
+      {/* DESKTOP SIDEBAR */}
+      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 z-20 shrink-0 h-full shadow-sm">
+        <div className="p-6 flex items-center gap-3 border-b border-gray-100 shrink-0">
+          <div className="bg-[#1D2A3A] p-2 rounded-xl shadow-md">
             <ShieldCheck className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h1 className="text-lg md:text-xl font-black text-gray-900 leading-tight">Painel Admin</h1>
-            <p className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-wider">Mais Trilha Menos Estresse</p>
+            <h1 className="text-lg font-black text-gray-900 leading-tight">Admin</h1>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Painel de Controle</p>
           </div>
         </div>
-        
-        <div className="flex items-center gap-2 md:gap-4">
+
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
+          <button 
+            onClick={() => setMainTab('trilhas')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${mainTab === 'trilhas' ? 'bg-orange-50 text-[#F17B37]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
+          >
+            <CalendarDays className="h-5 w-5" />
+            Trilhas
+          </button>
+          
+          <button 
+            onClick={() => setMainTab('clientes')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${mainTab === 'clientes' ? 'bg-orange-50 text-[#F17B37]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
+          >
+            <FileText className="h-5 w-5" />
+            Clientes
+          </button>
+
+          <button 
+            onClick={() => setMainTab('reservas')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${mainTab === 'reservas' ? 'bg-orange-50 text-[#F17B37]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
+          >
+            <CheckCircle2 className="h-5 w-5" />
+            Reservas
+          </button>
+
+          <button 
+            onClick={() => setMainTab('financas')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${mainTab === 'financas' ? 'bg-green-50 text-[#25D366]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
+          >
+            <DollarSign className="h-5 w-5" />
+            Finanças
+          </button>
+        </nav>
+
+        <div className="p-4 border-t border-gray-100 flex flex-col items-center shrink-0">
+           <button
+              onClick={() => setIsAssistantOpen(true)}
+              className="w-full bg-[#F17B37] hover:bg-[#e06925] text-white flex items-center justify-center gap-2 py-3 rounded-xl font-bold shadow-[0_0_15px_rgba(241,123,55,0.3)] transition-all hover:scale-105"
+            >
+              <Sparkles className="h-5 w-5" />
+              IA Assistente
+            </button>
+        </div>
+      </aside>
+
+      {/* MAIN CONTENT WRAPPER */}
+      <div className="flex-1 flex flex-col min-w-0 h-full">
+        <header className="bg-white border-b border-gray-100 px-4 py-4 shrink-0 shadow-sm flex items-center justify-between z-10 print:hidden">
+          <div className="flex items-center gap-3 md:hidden">
+            <div className="bg-[#1D2A3A] p-2 rounded-xl shadow-md hidden sm:block">
+              <ShieldCheck className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-lg font-black text-gray-900 leading-tight">Painel Admin</h1>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Mais Trilha Menos Estresse</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2 md:gap-4 ml-auto">
             
             {deferredPrompt && (
               <button 
@@ -791,8 +851,8 @@ export default function AdminPage() {
       </header>
 
       {/* 2. ÁREA CENTRAL DE CONTEÚDO ROLÁVEL */}
-      <main className="flex-1 overflow-y-auto print:overflow-visible custom-scrollbar p-4 md:p-6 pb-28">
-        <div className="max-w-4xl mx-auto w-full">
+      <main className="flex-1 overflow-y-auto print:overflow-visible custom-scrollbar p-4 md:p-8 pb-28 md:pb-8">
+        <div className="max-w-7xl mx-auto w-full">
           
           <AnimatePresence mode="wait">
             {/* --- VISÃO DAS TRILHAS --- */}
@@ -1614,7 +1674,7 @@ export default function AdminPage() {
       )}
 
       {/* 4. MENU INFERIOR (BOTTOM NAVIGATION) TIPO APP */}
-      <nav className="bg-white border-t border-gray-200 fixed bottom-0 w-full z-30 pb-safe print:hidden shadow-[0_-10px_20px_rgba(0,0,0,0.03)]">
+      <nav className="bg-white border-t border-gray-200 fixed bottom-0 w-full z-30 pb-safe print:hidden md:hidden shadow-[0_-10px_20px_rgba(0,0,0,0.03)]">
         <div className="flex justify-around items-center max-w-lg mx-auto relative px-2">
           
           <button 
@@ -1667,6 +1727,7 @@ export default function AdminPage() {
 
         </div>
       </nav>
+      </div>
 
       {/* --- MODAL: FORMULÁRIO DE TRILHA (TELA CHEIA) --- */}
       <AnimatePresence>

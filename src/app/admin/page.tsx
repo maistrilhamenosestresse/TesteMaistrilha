@@ -722,6 +722,16 @@ export default function AdminPage() {
             <DollarSign className="h-5 w-5" />
             Finanças
           </button>
+
+          <div className="pt-4 mt-4 border-t border-gray-100 hidden md:block">
+            <button 
+              onClick={() => window.location.href = '/gerenciador'}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all bg-[#1D2A3A] text-white hover:bg-gray-900 shadow-md hover:scale-105"
+            >
+              <Navigation className="h-5 w-5" />
+              Gerenciar Site
+            </button>
+          </div>
         </nav>
 
         <div className="p-4 border-t border-gray-100 flex flex-col items-center shrink-0">
